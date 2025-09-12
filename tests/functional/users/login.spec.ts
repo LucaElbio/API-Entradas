@@ -1,6 +1,5 @@
 import { test } from '@japa/runner'
 import User from '#models/user'
-import hash from '@adonisjs/core/services/hash'
 import db from '@adonisjs/lucid/services/db'
 
 test.group('Users - Login', (group) => {
@@ -11,13 +10,13 @@ test.group('Users - Login', (group) => {
   })
 
   test('should login user with valid credentials', async ({ client }) => {
-    // Create a test user
+    // Create a test user - NO hashear manualmente, AuthFinder lo hace automáticamente
     const user = await User.create({
       firstName: 'Juan',
       lastName: 'Pérez',
       email: 'juan.perez@example.com',
       dni: '12345678',
-      password: await hash.make('Password123'),
+      password: 'Password123', // Texto plano - el mixin lo hasheará automáticamente
       companyId: 1,
       roleId: 2,
     })
@@ -60,13 +59,13 @@ test.group('Users - Login', (group) => {
   })
 
   test('should not login with invalid password', async ({ client }) => {
-    // Create a test user
+    // Create a test user - NO hashear manualmente
     await User.create({
       firstName: 'Juan',
       lastName: 'Pérez',
       email: 'juan.perez@example.com',
       dni: '12345678',
-      password: await hash.make('Password123'),
+      password: 'Password123', // Texto plano
       companyId: 1,
       roleId: 2,
     })

@@ -59,17 +59,8 @@ export default class UsersController {
     try {
       const { email, password } = await loginUserValidator.validate(request.body())
 
-      // Buscar usuario
-      const user = await User.findBy('email', email.toLowerCase())
-      if (!user) {
-        return response.badRequest({ message: 'Credenciales inválidas' })
-      }
-
-      // Verificar contraseña
-      const isPasswordValid = await hash.verify(user.password, password)
-      if (!isPasswordValid) {
-        return response.badRequest({ message: 'Credenciales inválidas' })
-      }
+      // Usar el helper de autenticación para validar credenciales
+      const user = await User.verifyCredentials(email.toLowerCase(), password)
 
       // Crear token de acceso
       const token = await User.accessTokens.create(user)
@@ -96,10 +87,8 @@ export default class UsersController {
         })
       }
 
-      console.error('Error during login:', error)
-      return response.internalServerError({
-        message: 'Error interno del servidor',
-      })
+      // Cualquier error en verifyCredentials se trata como credenciales inválidas
+      return response.badRequest({ message: 'Credenciales inválidas' })
     }
   }
 
