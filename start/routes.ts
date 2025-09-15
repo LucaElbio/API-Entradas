@@ -8,16 +8,12 @@ router.get('/', async () => {
   }
 })
 
-// Rutas de autenticación públicas
-router.post('/auth/register', '#controllers/users_controller.register')
-router.post('/auth/login', '#controllers/users_controller.login')
-
-// Nuevos endpoints API según especificación
+// Endpoints API según especificación
 // BE-endpoints API- Alta de usuarios: POST /usuarios/registro
-router.post('/usuarios/registro', '#controllers/users_controller.register') // Mismo controlador, ruta diferente
+router.post('/usuarios/registro', '#controllers/users_controller.register')
 
 // BE-endpoints API- validación de credenciales y entrega de token: POST /usuarios/login
-router.post('/usuarios/login', '#controllers/users_controller.login') // Endpoint específico para login
+router.post('/usuarios/login', '#controllers/users_controller.login')
 
 // Rutas protegidas (requieren autenticación)
 router

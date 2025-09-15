@@ -8,7 +8,7 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Company from './company.js'
 import Role from './role.js'
 
-const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
+const AuthFinder = withAuthFinder(() => hash.use('bcrypt'), {
   uids: ['email'], // campo con el que se loguea
   passwordColumnName: 'password',
 })

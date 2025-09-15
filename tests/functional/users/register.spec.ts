@@ -17,7 +17,7 @@ test.group('Users - Register', (group) => {
       password: 'Password123',
     }
 
-    const response = await client.post('/auth/register').json(userData)
+    const response = await client.post('/usuarios/registro').json(userData)
 
     response.assertStatus(201)
     response.assertBodyContains({
@@ -40,7 +40,7 @@ test.group('Users - Register', (group) => {
       password: 'Password123',
     }
 
-    const response = await client.post('/auth/register').json(userData)
+    const response = await client.post('/usuarios/registro').json(userData)
 
     response.assertStatus(400)
     response.assertBodyContains({
@@ -57,7 +57,7 @@ test.group('Users - Register', (group) => {
       password: 'weak',
     }
 
-    const response = await client.post('/auth/register').json(userData)
+    const response = await client.post('/usuarios/registro').json(userData)
 
     response.assertStatus(400)
     response.assertBodyContains({
@@ -74,7 +74,7 @@ test.group('Users - Register', (group) => {
       password: 'Password123',
     }
 
-    const response = await client.post('/auth/register').json(userData)
+    const response = await client.post('/usuarios/registro').json(userData)
 
     response.assertStatus(400)
     response.assertBodyContains({
@@ -92,7 +92,7 @@ test.group('Users - Register', (group) => {
     }
 
     // Register first user
-    await client.post('/auth/register').json(userData)
+    await client.post('/usuarios/registro').json(userData)
 
     // Try to register second user with same email
     const secondUserData = {
@@ -100,7 +100,7 @@ test.group('Users - Register', (group) => {
       dni: '87654321',
     }
 
-    const response = await client.post('/auth/register').json(secondUserData)
+    const response = await client.post('/usuarios/registro').json(secondUserData)
 
     response.assertStatus(400)
     response.assertBodyContains({
@@ -118,7 +118,7 @@ test.group('Users - Register', (group) => {
     }
 
     // Register first user
-    await client.post('/auth/register').json(userData)
+    await client.post('/usuarios/registro').json(userData)
 
     // Try to register second user with same DNI
     const secondUserData = {
@@ -126,7 +126,7 @@ test.group('Users - Register', (group) => {
       email: 'another@example.com',
     }
 
-    const response = await client.post('/auth/register').json(secondUserData)
+    const response = await client.post('/usuarios/registro').json(secondUserData)
 
     response.assertStatus(400)
     response.assertBodyContains({
@@ -135,7 +135,7 @@ test.group('Users - Register', (group) => {
   })
 
   test('should validate required fields', async ({ client }) => {
-    const response = await client.post('/auth/register').json({})
+    const response = await client.post('/usuarios/registro').json({})
 
     response.assertStatus(400)
     response.assertBodyContains({

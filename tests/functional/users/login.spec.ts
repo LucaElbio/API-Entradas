@@ -26,7 +26,7 @@ test.group('Users - Login', (group) => {
       password: 'Password123',
     }
 
-    const response = await client.post('/auth/login').json(loginData)
+    const response = await client.post('/usuarios/login').json(loginData)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -50,7 +50,7 @@ test.group('Users - Login', (group) => {
       password: 'Password123',
     }
 
-    const response = await client.post('/auth/login').json(loginData)
+    const response = await client.post('/usuarios/login').json(loginData)
 
     response.assertStatus(400)
     response.assertBodyContains({
@@ -75,7 +75,7 @@ test.group('Users - Login', (group) => {
       password: 'WrongPassword',
     }
 
-    const response = await client.post('/auth/login').json(loginData)
+    const response = await client.post('/usuarios/login').json(loginData)
 
     response.assertStatus(400)
     response.assertBodyContains({
@@ -89,7 +89,7 @@ test.group('Users - Login', (group) => {
       password: 'Password123',
     }
 
-    const response = await client.post('/auth/login').json(loginData)
+    const response = await client.post('/usuarios/login').json(loginData)
 
     response.assertStatus(400)
     response.assertBodyContains({
@@ -98,7 +98,7 @@ test.group('Users - Login', (group) => {
   })
 
   test('should require all fields for login', async ({ client }) => {
-    const response = await client.post('/auth/login').json({})
+    const response = await client.post('/usuarios/login').json({})
 
     response.assertStatus(400)
     response.assertBodyContains({
