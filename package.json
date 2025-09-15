@@ -8,7 +8,6 @@
     "start": "node bin/server.js",
     "build": "node ace build",
     "dev": "node ace serve --hmr",
-    "test": "node ace test",
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit"
@@ -28,7 +27,6 @@
     "#abilities/*": "./app/abilities/*.js",
     "#database/*": "./database/*.js",
     "#start/*": "./start/*.js",
-    "#tests/*": "./tests/*.js",
     "#config/*": "./config/*.js"
   },
   "devDependencies": {
@@ -36,10 +34,6 @@
     "@adonisjs/eslint-config": "^2.0.0",
     "@adonisjs/prettier-config": "^1.4.4",
     "@adonisjs/tsconfig": "^1.4.0",
-    "@japa/api-client": "^3.1.0",
-    "@japa/assert": "^4.0.1",
-    "@japa/plugin-adonisjs": "^4.0.0",
-    "@japa/runner": "^4.2.0",
     "@swc/core": "1.11.24",
     "@types/bcrypt": "^6.0.0",
     "@types/luxon": "^3.7.1",
