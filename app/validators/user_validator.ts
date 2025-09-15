@@ -52,12 +52,12 @@ export const registerUserValidator = vine.compile(
         return !user
       }),
 
-    // Contraseña segura (mínimo 8 caracteres, una mayúscula, un número)
+    // Contraseña segura (mínimo 8 caracteres, mayúscula, minúscula, número y símbolo)
     password: vine
       .string()
       .minLength(8)
       .maxLength(128)
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]*$/),
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]*$/),
   })
 )
 
@@ -107,5 +107,5 @@ export const validationMessages = {
   'password.minLength': 'La contraseña debe tener al menos 8 caracteres',
   'password.maxLength': 'La contraseña no puede tener más de 128 caracteres',
   'password.regex':
-    'La contraseña debe contener al menos: una minúscula, una mayúscula y un número',
+    'La contraseña debe contener al menos: una minúscula, una mayúscula, un número y un carácter especial (@$!%*?&)',
 }

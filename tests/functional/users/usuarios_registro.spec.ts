@@ -14,7 +14,7 @@ test.group('Users - Nuevo Endpoint /usuarios/registro', (group) => {
       lastName: 'González',
       email: 'carlos.gonzalez@example.com',
       dni: '23456789',
-      password: 'SecurePass123',
+      password: 'SecurePass123!',
     }
 
     const response = await client.post('/usuarios/registro').json(userData)
@@ -47,7 +47,7 @@ test.group('Users - Nuevo Endpoint /usuarios/registro', (group) => {
       lastName: 'Martínez',
       email: 'ana.martinez@example.com',
       dni: '34567890',
-      password: 'SecurePass123',
+      password: 'SecurePass123!',
     }
 
     await client.post('/usuarios/registro').json(userData)
@@ -58,7 +58,7 @@ test.group('Users - Nuevo Endpoint /usuarios/registro', (group) => {
       lastName: 'Díaz',
       email: 'ana.martinez@example.com', // Email duplicado
       dni: '45678901',
-      password: 'SecurePass123',
+      password: 'SecurePass123!',
     }
 
     const response = await client.post('/usuarios/registro').json(duplicateUserData)
@@ -76,7 +76,7 @@ test.group('Users - Nuevo Endpoint /usuarios/registro', (group) => {
       lastName: 'Rodríguez',
       email: 'luis.rodriguez@example.com',
       dni: '56789012',
-      password: 'SecurePass123',
+      password: 'SecurePass123!',
     }
 
     await client.post('/usuarios/registro').json(userData)
@@ -87,7 +87,7 @@ test.group('Users - Nuevo Endpoint /usuarios/registro', (group) => {
       lastName: 'García',
       email: 'luis.garcia@example.com',
       dni: '56789012', // DNI duplicado
-      password: 'SecurePass123',
+      password: 'SecurePass123!',
     }
 
     const response = await client.post('/usuarios/registro').json(duplicateUserData)

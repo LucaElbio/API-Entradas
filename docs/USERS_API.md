@@ -3,11 +3,12 @@
 ## Modelo de Usuario
 
 ### Atributos del Usuario
+
 - **id**: Identificador único (autoincremental)
 - **companyId**: ID de la compañía (clave foránea, opcional)
-- **roleId**: ID del rol (clave foránea, opcional)  
+- **roleId**: ID del rol (clave foránea, opcional)
 - **firstName**: Nombre del usuario (2-50 caracteres, solo letras)
-- **lastName**: Apellido del usuario (2-50 caracteres, solo letras) 
+- **lastName**: Apellido del usuario (2-50 caracteres, solo letras)
 - **email**: Email único del usuario (validado y normalizado)
 - **dni**: DNI único del usuario (7-10 dígitos numéricos)
 - **password**: Contraseña hasheada (mínimo 8 caracteres, debe contener mayúscula, minúscula y número)
@@ -15,19 +16,22 @@
 - **updatedAt**: Fecha de actualización (automática)
 
 ### Relaciones
+
 - **Pertenece a Company**: Cada usuario pertenece a una compañía
 - **Pertenece a Role**: Cada usuario tiene un rol asignado
 
 ## Endpoints de Autenticación
 
 ### POST /auth/register
+
 Registra un nuevo usuario en el sistema.
 
 **Body:**
+
 ```json
 {
   "firstName": "Juan",
-  "lastName": "Pérez", 
+  "lastName": "Pérez",
   "email": "juan.perez@example.com",
   "dni": "12345678",
   "password": "Password123",
@@ -37,6 +41,7 @@ Registra un nuevo usuario en el sistema.
 ```
 
 **Respuesta exitosa (201):**
+
 ```json
 {
   "message": "Usuario registrado exitosamente",
@@ -54,6 +59,7 @@ Registra un nuevo usuario en el sistema.
 ```
 
 **Validaciones:**
+
 - **firstName**: Mínimo 2 caracteres, máximo 50, solo letras y espacios
 - **lastName**: Mínimo 2 caracteres, máximo 50, solo letras y espacios
 - **email**: Formato de email válido, único en el sistema
@@ -63,9 +69,11 @@ Registra un nuevo usuario en el sistema.
 - **roleId**: Opcional, debe ser un número válido (por defecto: 2 - Usuario)
 
 ### POST /auth/login
+
 Inicia sesión de un usuario existente.
 
 **Body:**
+
 ```json
 {
   "email": "juan.perez@example.com",
@@ -74,6 +82,7 @@ Inicia sesión de un usuario existente.
 ```
 
 **Respuesta exitosa (200):**
+
 ```json
 {
   "message": "Inicio de sesión exitoso",
@@ -92,17 +101,21 @@ Inicia sesión de un usuario existente.
 ```
 
 ## Endpoints Protegidos
+
 Los siguientes endpoints requieren autenticación mediante Bearer Token.
 
 ### GET /auth/me
+
 Obtiene el perfil del usuario autenticado.
 
 **Headers:**
+
 ```
 Authorization: Bearer oat_1.abc123...
 ```
 
 **Respuesta exitosa (200):**
+
 ```json
 {
   "user": {
@@ -119,14 +132,17 @@ Authorization: Bearer oat_1.abc123...
 ```
 
 ### POST /auth/logout
+
 Cierra la sesión del usuario autenticado.
 
 **Headers:**
+
 ```
 Authorization: Bearer oat_1.abc123...
 ```
 
 **Respuesta exitosa (200):**
+
 ```json
 {
   "message": "Sesión cerrada exitosamente"
@@ -136,9 +152,11 @@ Authorization: Bearer oat_1.abc123...
 ## Códigos de Error
 
 ### 400 - Bad Request
+
 Se retorna cuando hay errores de validación o credenciales inválidas.
 
 **Ejemplo - Error de validación:**
+
 ```json
 {
   "message": "Error de validación",
@@ -152,6 +170,7 @@ Se retorna cuando hay errores de validación o credenciales inválidas.
 ```
 
 **Ejemplo - Credenciales inválidas:**
+
 ```json
 {
   "message": "Credenciales inválidas"
@@ -159,9 +178,11 @@ Se retorna cuando hay errores de validación o credenciales inválidas.
 ```
 
 ### 401 - Unauthorized
+
 Se retorna cuando se intenta acceder a un endpoint protegido sin autenticación válida.
 
 ### 500 - Internal Server Error
+
 Se retorna cuando hay un error interno del servidor.
 
 ```json

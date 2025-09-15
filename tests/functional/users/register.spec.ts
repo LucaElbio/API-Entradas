@@ -14,7 +14,7 @@ test.group('Users - Register', (group) => {
       lastName: 'Pérez',
       email: 'juan.perez@example.com',
       dni: '12345678',
-      password: 'Password123',
+      password: 'Password123!',
     }
 
     const response = await client.post('/usuarios/registro').json(userData)
@@ -37,7 +37,7 @@ test.group('Users - Register', (group) => {
       lastName: 'Pérez',
       email: 'invalid-email',
       dni: '12345678',
-      password: 'Password123',
+      password: 'Password123!',
     }
 
     const response = await client.post('/usuarios/registro').json(userData)
@@ -71,7 +71,7 @@ test.group('Users - Register', (group) => {
       lastName: 'Pérez',
       email: 'juan.perez@example.com',
       dni: '123abc',
-      password: 'Password123',
+      password: 'Password123!',
     }
 
     const response = await client.post('/usuarios/registro').json(userData)
@@ -88,7 +88,7 @@ test.group('Users - Register', (group) => {
       lastName: 'Pérez',
       email: 'duplicate@example.com',
       dni: '12345678',
-      password: 'Password123',
+      password: 'Password123!',
     }
 
     // Register first user
@@ -114,7 +114,7 @@ test.group('Users - Register', (group) => {
       lastName: 'Pérez',
       email: 'juan@example.com',
       dni: '12345678',
-      password: 'Password123',
+      password: 'Password123!',
     }
 
     // Register first user

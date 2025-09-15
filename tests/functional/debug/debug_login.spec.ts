@@ -19,7 +19,7 @@ test.group('Debug - Login Issues', (group) => {
     console.log('Roles:', roles)
 
     // 2. Password sin hashear manualmente - que AuthFinder lo haga
-    const plainPassword = 'Password123'
+    const plainPassword = 'Password123!'
 
     console.log('Plain password:', plainPassword)
 
@@ -52,7 +52,7 @@ test.group('Debug - Login Issues', (group) => {
     // 7. Probar login
     const loginData = {
       email: 'test@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     }
 
     const response = await client.post('/usuarios/login').json(loginData)
@@ -70,17 +70,17 @@ test.group('Debug - Login Issues', (group) => {
       lastName: 'User2',
       email: 'test2@example.com',
       dni: '87654321',
-      password: 'Password123', // Texto plano
+      password: 'Password123!', // Contraseña con símbolo especial requerido
       companyId: 1,
       roleId: 1,
     })
 
     const loginData = {
       email: 'test2@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     }
 
-    const response = await client.post('/auth/login').json(loginData)
+    const response = await client.post('/usuarios/login').json(loginData)
 
     console.log('Auth login response status:', response.status())
     console.log('Auth login response body:', response.body())
