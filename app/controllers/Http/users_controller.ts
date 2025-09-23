@@ -106,7 +106,7 @@ export default class UsersController {
       const user2 = await User.findBy('email', validatedEmail)
       console.log(user2) // Verificar que existe
 
-      const isValid = await hash.verify(user2!.password, 'tu-contraseña')
+      const isValid = await hash.verify(user2!.password, password)
       console.log(isValid) // Debería ser true
 
       // Usar el helper de autenticación para validar credenciales
