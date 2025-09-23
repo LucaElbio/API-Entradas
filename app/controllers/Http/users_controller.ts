@@ -103,7 +103,7 @@ export default class UsersController {
       })
 
       // Usar el helper de autenticación para validar credenciales
-      const user = await User.verifyCredentials(validatedEmail.toLowerCase(), password)
+      const user = await User.verifyCredentials(validatedEmail, password)
       logger.info(`verifyied`)
       // Crear token de acceso con expiración de 24 horas
       const token = await User.accessTokens.create(user, ['*'], {
