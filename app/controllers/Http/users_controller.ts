@@ -1,4 +1,3 @@
-import hash from '@adonisjs/core/services/hash'
 import User from '#models/user'
 import type { HttpContext } from '@adonisjs/core/http'
 import { registerUserValidator, loginUserValidator } from '#validators/user_validator'
@@ -88,8 +87,6 @@ export default class UsersController {
 
     try {
       const { email: validatedEmail, password } = await loginUserValidator.validate(request.body())
-      logger.info(`${validatedEmail}`)
-      logger.info(`${password}`)
 
       // Log intento de login
       logger.info('User login attempt', {
@@ -99,16 +96,9 @@ export default class UsersController {
         timestamp: new Date().toISOString(),
       })
 
-      // En node ace repl
-      const user2 = await User.findBy('email', validatedEmail)
-      console.log(user2) // Verificar que existe
-
-      const isValid = await hash.verify(user2!.password, password)
-      console.log(isValid) // Debería ser true
-
       // Usar el helper de autenticación para validar credenciales
       const user = await User.verifyCredentials(validatedEmail, password)
-      logger.info(`verifyied`)
+
       // Crear token de acceso con expiración de 24 horas
       const token = await User.accessTokens.create(user, ['*'], {
         expiresIn: '24 hours',
