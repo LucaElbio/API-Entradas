@@ -4,8 +4,30 @@ import { middleware } from './kernel.js'
 // Rutas de eventos
 router
   .group(() => {
-    router.get('/events', '#controllers/Http/events_controller.index')
-    router.get('/events/:id', '#controllers/Http/events_controller.show')
+    router
+      .group(() => {
+        router.get('/', '#controllers/Http/events_controller.index')
+        router.get('/:id', '#controllers/Http/events_controller.show')
+      })
+      .prefix('/events')
+
+    router
+      .group(() => {
+        router.post('/register', '#controllers/Http/users_controller.register')
+        router.post('/login', '#controllers/Http/users_controller.login')
+
+        // Rutas protegidas (requieren autenticación)
+        router
+          .group(() => {
+            router.get('/me', '#controllers/Http/users_controller.me')
+            router.post('/logout', '#controllers/Http/users_controller.logout')
+            router.post('/refresh', '#controllers/Http/users_controller.refreshToken')
+          })
+          .use(middleware.auth())
+          .prefix('/auth')
+      })
+      .prefix('/auth')
+      .use(middleware.rateLimit())
   })
   .prefix('/api')
 
@@ -14,24 +36,3 @@ router.get('/', async () => {
     hello: 'world',
   }
 })
-
-// Endpoints API según especificación
-// BE-endpoints API- Alta de usuarios: POST /usuarios/registro
-router.post('/usuarios/registro', '#controllers/users_controller.register')
-
-// BE-endpoints API- validación de credenciales y entrega de token: POST /usuarios/login
-// Aplicamos rate limiting solo a las rutas de login para prevenir ataques de fuerza bruta
-router
-  .group(() => {
-    router.post('/usuarios/login', '#controllers/users_controller.login')
-  })
-  .use(middleware.rateLimit())
-
-// Rutas protegidas (requieren autenticación)
-router
-  .group(() => {
-    router.get('/auth/me', '#controllers/users_controller.me')
-    router.post('/auth/logout', '#controllers/users_controller.logout')
-    router.post('/auth/refresh', '#controllers/users_controller.refreshToken')
-  })
-  .use(middleware.auth())
