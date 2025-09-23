@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2020",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["jest", "node"],
+    "outDir": "./dist",
+    "rootDir": "../"
+  },
+  "include": ["../app/**/*.ts", "./**/*.ts", "../**/*.d.ts"],
+  "exclude": ["../build", "../node_modules"]
+}

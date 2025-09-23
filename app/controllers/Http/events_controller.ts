@@ -1,5 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import Event from '../../models/event.js'
+import Event from '#models/event'
 
 export default class EventsController {
   public async index({ request, response }: HttpContext) {
