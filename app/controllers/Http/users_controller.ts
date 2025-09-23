@@ -91,6 +91,8 @@ export default class UsersController {
 
     try {
       const { email: validatedEmail, password } = await loginUserValidator.validate(request.body())
+      logger.info(`${validatedEmail}`)
+      logger.info(`${password}`)
 
       // Log intento de login
       logger.info('User login attempt', {
@@ -102,7 +104,7 @@ export default class UsersController {
 
       // Usar el helper de autenticación para validar credenciales
       const user = await User.verifyCredentials(validatedEmail.toLowerCase(), password)
-
+      logger.info(`verifyied`)
       // Crear token de acceso con expiración de 24 horas
       const token = await User.accessTokens.create(user, ['*'], {
         expiresIn: '24 hours',
@@ -141,7 +143,7 @@ export default class UsersController {
         error: error.message,
         timestamp: new Date().toISOString(),
       })
-
+      logger.warn(error)
       if (error.messages) {
         return response.badRequest({
           message: 'Error de validación',
