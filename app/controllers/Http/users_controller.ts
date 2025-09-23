@@ -23,16 +23,13 @@ export default class UsersController {
         timestamp: new Date().toISOString(),
       })
 
-      // Hashear contraseña
-      const hashedPassword = await hash.make(data.password)
-
       // Crear usuario
       const user = await User.create({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email.toLowerCase(),
         dni: data.dni,
-        password: hashedPassword,
+        password: data.password,
         companyId: data.companyId || 1,
         roleId: data.roleId || 2,
       })
