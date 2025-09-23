@@ -24,7 +24,6 @@ router
             router.post('/refresh', '#controllers/Http/users_controller.refreshToken')
           })
           .use(middleware.auth())
-          .prefix('/auth')
       })
       .prefix('/auth')
       .use(middleware.rateLimit())
