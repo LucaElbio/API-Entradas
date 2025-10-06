@@ -26,5 +26,14 @@ router
     router.get('/auth/me', '#controllers/users_controller.me')
     router.post('/auth/logout', '#controllers/users_controller.logout')
     router.post('/auth/refresh', '#controllers/users_controller.refreshToken')
+
+    // BE-Endpoint POST /tickets/pay - Process payment and generate tickets
+    router.post('/tickets/pay', '#controllers/payments_controller.pay')
+
+    // Tickets endpoints
+    router.get('/tickets', '#controllers/tickets_controller.index')
+    router.get('/tickets/:id', '#controllers/tickets_controller.show')
+    router.post('/tickets/verify', '#controllers/tickets_controller.verify')
+    router.post('/tickets/:id/use', '#controllers/tickets_controller.use')
   })
   .use(middleware.auth())
