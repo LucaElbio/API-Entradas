@@ -10,6 +10,9 @@ import QrService from '#services/qr_service'
 import MailService from '#services/mail_service'
 import db from '@adonisjs/lucid/services/db'
 
+// Constants
+const MAX_TICKETS_PER_PURCHASE = 10 // Máximo de tickets por compra
+
 export default class PaymentsController {
   /**
    * POST /tickets/pay
@@ -39,7 +42,34 @@ export default class PaymentsController {
         .preload('user')
         .firstOrFail()
 
-      // 2. Validate reservation status - should be PENDING
+      // 2. Validate reservation quantity
+      if (reservation.quantity <= 0) {
+        await trx.rollback()
+        return response.badRequest({
+          error: 'Invalid quantity',
+          message: 'La cantidad de tickets debe ser mayor a 0',
+        })
+      }
+
+      // 3. Validate maximum tickets per purchase
+      if (reservation.quantity > MAX_TICKETS_PER_PURCHASE) {
+        await trx.rollback()
+        return response.badRequest({
+          error: 'Quantity exceeded',
+          message: `No se pueden comprar más de ${MAX_TICKETS_PER_PURCHASE} tickets por transacción`,
+        })
+      }
+
+      // 4. Validate event stock availability
+      if (reservation.event.ticketsAvailable < reservation.quantity) {
+        await trx.rollback()
+        return response.badRequest({
+          error: 'Insufficient stock',
+          message: `No hay suficientes tickets disponibles. Disponibles: ${reservation.event.ticketsAvailable}, solicitados: ${reservation.quantity}`,
+        })
+      }
+
+      // 5. Validate reservation status - should be PENDING
       const pendingStatus = await ReservationStatus.query({ client: trx })
         .where('code', 'PENDING')
         .firstOrFail()
@@ -52,7 +82,7 @@ export default class PaymentsController {
         })
       }
 
-      // 3. Check if reservation hasn't expired
+      // 6. Check if reservation hasn't expired
       if (reservation.expiresAt < DateTime.now()) {
         // Mark as expired
         const expiredStatus = await ReservationStatus.query({ client: trx })
@@ -61,7 +91,7 @@ export default class PaymentsController {
 
         reservation.statusId = expiredStatus.id
         await reservation.save()
-        await trx.rollback()
+        await trx.commit()
 
         return response.badRequest({
           error: 'Reservation expired',
@@ -69,7 +99,11 @@ export default class PaymentsController {
         })
       }
 
-      // 4. Mark reservation as PAID
+      // 7. Update event stock (reduce available tickets)
+      reservation.event.ticketsAvailable -= reservation.quantity
+      await reservation.event.save()
+
+      // 8. Mark reservation as PAID
       const paidStatus = await ReservationStatus.query({ client: trx })
         .where('code', 'PAID')
         .firstOrFail()
@@ -77,7 +111,11 @@ export default class PaymentsController {
       reservation.statusId = paidStatus.id
       await reservation.save()
 
-      // 5. Create payment record with APPROVED status
+      // 9. Send purchase confirmation email immediately after payment validation
+      // (Email sent here before generating tickets to notify user ASAP)
+      console.log('📧 Preparing to send confirmation email...')
+
+      // 10. Create payment record with APPROVED status
       const approvedPaymentStatus = await PaymentStatus.query({ client: trx })
         .where('code', 'APPROVED')
         .firstOrFail()
@@ -93,7 +131,7 @@ export default class PaymentsController {
         { client: trx }
       )
 
-      // 6. Generate tickets with QR codes
+      // 11. Generate tickets with QR codes
       const qrService = new QrService()
       const activeTicketStatus = await TicketStatus.query({ client: trx })
         .where('code', 'ACTIVE')
@@ -128,10 +166,11 @@ export default class PaymentsController {
         tickets.push(ticket)
       }
 
-      // Commit transaction
+      // 12. Commit transaction (all data saved successfully)
       await trx.commit()
 
-      // 7. Send purchase confirmation email
+      // 13. Send email with tickets (async, non-blocking)
+      // This is done AFTER commit to ensure data consistency
       try {
         const mailService = new MailService()
         await mailService.sendPurchaseConfirmation({
@@ -166,11 +205,11 @@ export default class PaymentsController {
         })
         console.log('✅ Confirmation email sent successfully')
       } catch (emailError) {
-        // Log email error but don't fail the payment
+        // Log email error but don't fail the payment (payment already committed)
         console.error('⚠️  Error sending confirmation email:', emailError)
       }
 
-      // 8. Return success response
+      // 14. Return success response
       return response.ok({
         message: 'Pago procesado exitosamente',
         data: {

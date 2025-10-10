@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, scope } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Company from './company.js'
 import Venue from './venue.js'
@@ -28,7 +28,12 @@ export default class Event extends BaseModel {
   @column()
   declare description: string
 
-  @column.dateTime()
+  @column.date({
+    serialize: (value: DateTime) => {
+      // Serializar solo como fecha (YYYY-MM-DD)
+      return value ? value.toISODate() : null
+    },
+  })
   declare datetime: DateTime
 
   @column()
@@ -61,4 +66,12 @@ export default class Event extends BaseModel {
     foreignKey: 'statusId',
   })
   declare status: BelongsTo<typeof EventStatus>
+
+  /**
+   * Query scope to order events by date in ascending order
+   * Usage: Event.query().apply(scopes => scopes.orderByDate())
+   */
+  static orderByDate = scope((query) => {
+    query.orderBy('datetime', 'asc')
+  })
 }

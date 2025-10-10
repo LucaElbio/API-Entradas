@@ -36,7 +36,6 @@ export default class TicketsController {
             id: ticket.reservation.id,
             totalAmount: ticket.reservation.totalAmount,
           },
-          createdAt: ticket.createdAt,
         })),
       })
     } catch (error) {
@@ -115,6 +114,8 @@ export default class TicketsController {
   /**
    * POST /tickets/verify
    * Verify a QR code and get ticket information
+   * IMPORTANT: This endpoint ONLY verifies the QR validity, it does NOT change the ticket status
+   * Use the /tickets/:id/use endpoint to mark a ticket as USED after verification
    */
   async verify({ request, response }: HttpContext) {
     const { qr_code: qrCode } = request.only(['qr_code'])
@@ -127,7 +128,7 @@ export default class TicketsController {
     }
 
     try {
-      // Validate QR format
+      // Validate QR format first
       const qrService = new QrService()
       if (!qrService.verifyQRCode(qrCode)) {
         return response.badRequest({
@@ -136,7 +137,7 @@ export default class TicketsController {
         })
       }
 
-      // Find ticket by QR code
+      // Find ticket by QR code in database
       const ticket = await Ticket.query()
         .where('qr_code', qrCode)
         .preload('event', (eventQuery) => {
@@ -146,7 +147,9 @@ export default class TicketsController {
         .preload('owner')
         .firstOrFail()
 
-      // Check if ticket is active
+      // Check if ticket is valid (ACTIVE status)
+      // NOTE: This endpoint ONLY checks the validity, it does NOT change the ticket status
+      // The ticket status is only changed when using the /tickets/:id/use endpoint
       const isActive = ticket.status.code === 'ACTIVE'
 
       return response.ok({
@@ -194,7 +197,9 @@ export default class TicketsController {
 
   /**
    * POST /tickets/:id/use
-   * Mark a ticket as used (when scanned at event entrance)
+   * Mark a ticket as USED (when scanned at event entrance)
+   * IMPORTANT: This endpoint changes the ticket status to USED permanently
+   * It should be called ONLY after verifying the ticket with /tickets/verify
    */
   async use({ params, response }: HttpContext) {
     const ticketId = params.id

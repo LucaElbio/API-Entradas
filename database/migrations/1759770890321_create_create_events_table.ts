@@ -12,7 +12,7 @@ export default class extends BaseSchema {
       table.integer('status_id').unsigned().notNullable().references('id').inTable('event_statuses').onDelete('RESTRICT')
       table.string('title', 255).notNullable()
       table.text('description').notNullable()
-      table.timestamp('datetime', { useTz: true }).notNullable()
+      table.date('datetime').notNullable()
       table.integer('tickets_total').notNullable()
       table.integer('tickets_available').notNullable()
       table.decimal('price', 10, 2).notNullable()
