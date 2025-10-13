@@ -27,6 +27,18 @@ router
       })
       .prefix('/auth')
       .use(middleware.rateLimit())
+
+    // Rutas de tickets (requieren autenticación)
+    router
+      .group(() => {
+        router.get('/mine', '#controllers/Http/tickets_controller.mine')
+        router.post('/:id/transfer', '#controllers/Http/tickets_controller.transfer')
+        router.post('/:id/transfer/accept', '#controllers/Http/tickets_controller.acceptTransfer')
+        router.post('/:id/transfer/reject', '#controllers/Http/tickets_controller.rejectTransfer')
+      })
+      .prefix('/tickets')
+      .use(middleware.auth())
+      .use(middleware.rateLimit())
   })
   .prefix('/api')
 
