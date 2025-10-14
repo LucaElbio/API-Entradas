@@ -44,7 +44,6 @@ export default class PaymentsController {
 
       // 2. Validate reservation quantity
       if (reservation.quantity <= 0) {
-        await trx.rollback()
         return response.badRequest({
           error: 'Invalid quantity',
           message: 'La cantidad de tickets debe ser mayor a 0',
@@ -53,7 +52,6 @@ export default class PaymentsController {
 
       // 3. Validate maximum tickets per purchase
       if (reservation.quantity > MAX_TICKETS_PER_PURCHASE) {
-        await trx.rollback()
         return response.badRequest({
           error: 'Quantity exceeded',
           message: `No se pueden comprar más de ${MAX_TICKETS_PER_PURCHASE} tickets por transacción`,
@@ -62,7 +60,6 @@ export default class PaymentsController {
 
       // 4. Validate event stock availability
       if (reservation.event.ticketsAvailable < reservation.quantity) {
-        await trx.rollback()
         return response.badRequest({
           error: 'Insufficient stock',
           message: `No hay suficientes tickets disponibles. Disponibles: ${reservation.event.ticketsAvailable}, solicitados: ${reservation.quantity}`,
@@ -75,7 +72,6 @@ export default class PaymentsController {
         .firstOrFail()
 
       if (reservation.statusId !== pendingStatus.id) {
-        await trx.rollback()
         return response.badRequest({
           error: 'Invalid reservation status',
           message: 'La reserva no está en estado pendiente',
@@ -99,11 +95,15 @@ export default class PaymentsController {
         })
       }
 
-      // 7. Update event stock (reduce available tickets)
-      reservation.event.ticketsAvailable -= reservation.quantity
-      await reservation.event.save()
+      // 8. Decrement tickets from stock permanently (already reserved, now confirmed)
+      // Note: tickets were already reserved when the reservation was created,
+      // so we just need to confirm the sale by keeping them out of stock
+      const event = await reservation.event
+      event.useTransaction(trx)
+      // No need to decrement again as it was done during reservation creation
+      // We just ensure the stock remains decremented
 
-      // 8. Mark reservation as PAID
+      // 9. Mark reservation as PAID
       const paidStatus = await ReservationStatus.query({ client: trx })
         .where('code', 'PAID')
         .firstOrFail()
@@ -111,11 +111,11 @@ export default class PaymentsController {
       reservation.statusId = paidStatus.id
       await reservation.save()
 
-      // 9. Send purchase confirmation email immediately after payment validation
+      // 10. Send purchase confirmation email immediately after payment validation
       // (Email sent here before generating tickets to notify user ASAP)
       console.log('📧 Preparing to send confirmation email...')
 
-      // 10. Create payment record with APPROVED status
+      // 11. Create payment record with APPROVED status
       const approvedPaymentStatus = await PaymentStatus.query({ client: trx })
         .where('code', 'APPROVED')
         .firstOrFail()
@@ -131,7 +131,7 @@ export default class PaymentsController {
         { client: trx }
       )
 
-      // 11. Generate tickets with QR codes
+      // 12. Generate tickets with QR codes
       const qrService = new QrService()
       const activeTicketStatus = await TicketStatus.query({ client: trx })
         .where('code', 'ACTIVE')

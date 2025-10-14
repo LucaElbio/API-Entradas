@@ -27,6 +27,12 @@ router
     router.post('/auth/logout', '#controllers/users_controller.logout')
     router.post('/auth/refresh', '#controllers/users_controller.refreshToken')
 
+    // Reservations endpoints
+    router.post('/reservations', '#controllers/reservations_controller.create')
+    router.get('/reservations', '#controllers/reservations_controller.index')
+    router.get('/reservations/:id', '#controllers/reservations_controller.show')
+    router.delete('/reservations/:id', '#controllers/reservations_controller.cancel')
+
     // BE-Endpoint POST /tickets/pay - Process payment and generate tickets
     router.post('/tickets/pay', '#controllers/payments_controller.pay')
 
