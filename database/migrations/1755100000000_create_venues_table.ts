@@ -5,7 +5,7 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.bigIncrements('id')
+      table.increments('id')
       table
         .integer('company_id')
         .unsigned()
