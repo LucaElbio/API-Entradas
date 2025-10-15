@@ -21,5 +21,6 @@
       "#start/*": ["start/*"],
       "#config/*": ["config/*"]
     }
-  }
+  },
+  "exclude": ["tests/**/*"]
 }

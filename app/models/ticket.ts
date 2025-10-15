@@ -1,34 +1,36 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Event from './event.js'
-import Reservation from './reservation.js'
 import User from './user.js'
+import TicketTransfer from './ticket_transfer.js'
+import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import Reservation from './reservation.js'
 import TicketStatus from './ticket_status.js'
 
 export default class Ticket extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
-
-  @column()
-  declare eventId: number
-
+  
   @column()
   declare reservationId: number
 
-  @column()
+  @column({ columnName: 'event_id' })
+  declare eventId: number
+
+  @column({ columnName: 'owner_id' })
   declare ownerId: number
 
-  @column()
+  @column({ columnName: 'status_id' })
   declare statusId: number
 
-  @column()
+  @column({ columnName: 'qr_code' })
   declare qrCode: string
 
-  @column()
+  @column({ columnName: 'qr_image_url' })
   declare qrImageUrl: string | null
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'used_at' })
   declare usedAt: DateTime | null
 
   @column.dateTime({ autoCreate: true })
@@ -37,7 +39,9 @@ export default class Ticket extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Event)
+  @belongsTo(() => Event, {
+    foreignKey: 'eventId',
+  })
   declare event: BelongsTo<typeof Event>
 
   @belongsTo(() => Reservation)
@@ -52,4 +56,9 @@ export default class Ticket extends BaseModel {
     foreignKey: 'statusId',
   })
   declare status: BelongsTo<typeof TicketStatus>
+
+  @hasMany(() => TicketTransfer, {
+    foreignKey: 'ticketId',
+  })
+  declare transfers: HasMany<typeof TicketTransfer>
 }
