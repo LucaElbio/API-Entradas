@@ -4,7 +4,6 @@ import Reservation from '#models/reservation'
 import ReservationStatus from '#models/reservation_status'
 import Event from '#models/event'
 import db from '@adonisjs/lucid/services/db'
-import crypto from 'node:crypto'
 
 // Constants
 const RESERVATION_EXPIRATION_MINUTES = 15 // Tiempo de expiración de la reserva

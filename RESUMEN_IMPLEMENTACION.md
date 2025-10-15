@@ -3,26 +3,32 @@
 ## 📦 Archivos creados
 
 ### Migraciones
+
 - ✅ `1760303658616_create_create_ticket_statuses_table.ts` - Estados de tickets
 - ✅ `1760303683087_create_create_transfer_statuses_table.ts` - Estados de transferencias
 - ✅ `1760303792874_create_create_tickets_table.ts` - Tabla de tickets
 - ✅ `1760303815324_create_create_ticket_transfers_table.ts` - Tabla de transferencias
 
 ### Modelos
+
 - ✅ `app/models/ticket.ts` - Modelo Ticket
 - ✅ `app/models/ticket_transfer.ts` - Modelo TicketTransfer
 
 ### Controladores
+
 - ✅ `app/controllers/Http/tickets_controller.ts` - Controlador completo con todos los endpoints
 
 ### Seeders
+
 - ✅ `database/seeders/ticket_status_seeder.ts` - Estados de tickets
 - ✅ `database/seeders/transfer_status_seeder.ts` - Estados de transferencias
 
 ### Comandos
+
 - ✅ `app/commands/expire_transfers.ts` - Comando para expirar transferencias
 
 ### Rutas
+
 - ✅ Rutas agregadas en `start/routes.ts`:
   - GET `/api/tickets/mine`
   - POST `/api/tickets/:id/transfer`
@@ -30,6 +36,7 @@
   - POST `/api/tickets/:id/transfer/reject`
 
 ### Documentación
+
 - ✅ `docs/TICKETS_API.md` - Documentación completa de la API
 - ✅ `docs/TICKETS_SETUP.md` - Guía de instalación
 - ✅ `database/manual_migrations.sql` - SQL manual por si las migraciones fallan
@@ -41,26 +48,31 @@
 ### 1. Ejecutar las migraciones
 
 Si las migraciones funcionan:
+
 ```bash
 node ace migration:run
 ```
 
 Si las migraciones dan error, ejecuta manualmente el archivo:
+
 ```bash
 # Abre tu cliente MySQL/PostgreSQL y ejecuta:
 database/manual_migrations.sql
 ```
 
 ### 2. Ejecutar los seeders
+
 ```bash
 node ace db:seed --files="database/seeders/ticket_status_seeder.ts"
 node ace db:seed --files="database/seeders/transfer_status_seeder.ts"
 ```
 
 ### 3. Insertar datos de prueba
+
 Ejecuta las queries de datos de prueba del archivo `manual_migrations.sql` (sección DATOS DE PRUEBA)
 
 ### 4. Iniciar el servidor
+
 ```bash
 node ace serve --watch
 ```
@@ -70,14 +82,18 @@ node ace serve --watch
 ## 📋 Endpoints implementados según tu DER
 
 ### ✅ US014 - Visualizar mis entradas
+
 **GET `/api/tickets/mine`**
+
 - Obtiene tickets del usuario autenticado
 - Separados por eventos futuros y pasados
 - Incluye QR, nombre evento, fecha, lugar
 - **Estados usados**: `active`, `used`
 
 ### ✅ US015 - Transferir entrada
+
 **POST `/api/tickets/:id/transfer`**
+
 - Valida pertenencia de la entrada (`owner_id`)
 - Valida que el evento sea futuro
 - Busca receptor por DNI
@@ -86,6 +102,7 @@ node ace serve --watch
 - Guarda el QR antiguo en `old_qr`
 
 **POST `/api/tickets/:id/transfer/accept`**
+
 - Valida que el usuario sea el receptor (`to_user_id`)
 - Verifica que no haya expirado
 - Cambia `owner_id` del ticket
@@ -94,13 +111,16 @@ node ace serve --watch
 - Guarda `responded_at`
 
 **POST `/api/tickets/:id/transfer/reject`**
+
 - Valida que el usuario sea el receptor
 - Marca transferencia como `rejected`
 - Ticket permanece con el emisor original
 - Guarda `responded_at`
 
 ### ⏰ Expiración automática
+
 **Comando:** `node ace tickets:expire-transfers`
+
 - Busca transferencias con `status_id` = 1 (pending)
 - Donde `expires_at <= NOW()`
 - Cambia `status_id` a 4 (expired)
@@ -110,6 +130,7 @@ node ace serve --watch
 ## 📊 Estructura según tu DER
 
 ### TICKETS
+
 ```sql
 id              BIGINT (PK)
 event_id        BIGINT (FK → events)
@@ -123,6 +144,7 @@ updated_at      TIMESTAMP
 ```
 
 ### TICKET_TRANSFERS
+
 ```sql
 id                BIGINT (PK)
 ticket_id         BIGINT (FK → tickets)
@@ -139,6 +161,7 @@ updated_at        TIMESTAMP
 ```
 
 ### TICKET_STATUSES
+
 ```sql
 id    BIGINT (PK)
 code  VARCHAR(50) UNIQUE
@@ -148,6 +171,7 @@ name  VARCHAR(100)
 Valores: `active`, `used`, `cancelled`, `transferred`
 
 ### TRANSFER_STATUSES
+
 ```sql
 id    BIGINT (PK)
 code  VARCHAR(50) UNIQUE
@@ -161,12 +185,14 @@ Valores: `pending`, `accepted`, `rejected`, `expired`
 ## ✅ Tareas completadas
 
 ### US014 - Visualizar mis entradas
+
 - [x] Endpoint GET /tickets/mine
 - [x] Separación eventos futuros/pasados
 - [x] Incluye QR, nombre, fecha, lugar
 - [x] Usa `status_id` según DER
 
 ### US015 - Transferir entrada
+
 - [x] POST /tickets/:id/transfer
 - [x] Validación pertenencia y evento futuro
 - [x] Búsqueda por DNI en `receiver_contact`

@@ -22,25 +22,31 @@ En este sprint se implementaron 3 Historias de Usuario completas relacionadas co
 ## 🎯 Historias de Usuario Implementadas
 
 ### HU-1: Completar Pago
+
 **Como usuario, quiero realizar el pago de mis entradas para finalizar la compra.**
 
 **Criterios de aceptación:**
+
 - ✅ Redirigir a pasarela simulada de pago
 - ✅ Registrar el estado del pago como "aprobado"
 - ✅ Generar las entradas con su respectivo código QR
 
 ### HU-2: Generar Código QR Único
+
 **Como usuario, quiero recibir un QR único por entrada comprada, para validar mi ingreso al evento.**
 
 **Criterios de aceptación:**
+
 - ✅ El QR debe ser único y contener datos de la entrada
 - ✅ Asociar el QR al usuario y evento
 - ✅ Al escanearlo debe poder verificarse como válido
 
 ### HU-3: Confirmación de Compra
+
 **Como usuario, quiero recibir un email de confirmación después de completar mi compra, para tener un registro y acceso a mis entradas.**
 
 **Criterios de aceptación:**
+
 - ✅ Enviar email automáticamente al completar el pago
 - ✅ Incluir detalles del evento (título, fecha, hora, lugar)
 - ✅ Incluir códigos QR de todas las entradas compradas
@@ -52,6 +58,7 @@ En este sprint se implementaron 3 Historias de Usuario completas relacionadas co
 ## 🗄️ Base de Datos - Nuevas Tablas
 
 ### Tablas creadas:
+
 1. `venues` - Recintos/lugares de eventos
 2. `events` - Eventos
 3. `event_statuses` - Estados de eventos
@@ -65,18 +72,21 @@ En este sprint se implementaron 3 Historias de Usuario completas relacionadas co
 ### Estados iniciales configurados:
 
 **Reservation Statuses:**
+
 - `PENDING` - Pendiente
 - `PAID` - Pagado
 - `EXPIRED` - Expirado
 - `CANCELLED` - Cancelado
 
 **Payment Statuses:**
+
 - `PENDING` - Pendiente
 - `APPROVED` - Aprobado
 - `REJECTED` - Rechazado
 - `REFUNDED` - Reembolsado
 
 **Ticket Statuses:**
+
 - `ACTIVE` - Activo
 - `USED` - Usado
 - `CANCELLED` - Cancelado
@@ -87,12 +97,15 @@ En este sprint se implementaron 3 Historias de Usuario completas relacionadas co
 ## 🚀 Endpoints Implementados
 
 ### 1. POST /tickets/pay
+
 **Procesar pago y generar tickets con QR**
 
 #### Autenticación
+
 ✅ Requerida (Bearer Token)
 
 #### Request
+
 ```http
 POST /tickets/pay
 Authorization: Bearer {token}
@@ -104,6 +117,7 @@ Content-Type: application/json
 ```
 
 #### Response (200 OK)
+
 ```json
 {
   "message": "Pago procesado exitosamente",
@@ -140,12 +154,14 @@ Content-Type: application/json
 ```
 
 #### Errores posibles
+
 - `400` - Reserva no está en estado PENDING
 - `400` - Reserva expirada
 - `404` - Reserva no encontrada
 - `500` - Error interno
 
 #### ⚠️ Importante para Frontend
+
 - El `qrImageUrl` es una imagen en formato **base64** (data URL)
 - Puede ser usada directamente en un `<img src="{qrImageUrl}">`
 - Los tickets se generan automáticamente según la cantidad de la reserva
@@ -153,18 +169,22 @@ Content-Type: application/json
 ---
 
 ### 2. GET /tickets
+
 **Listar todos los tickets del usuario**
 
 #### Autenticación
+
 ✅ Requerida (Bearer Token)
 
 #### Request
+
 ```http
 GET /tickets
 Authorization: Bearer {token}
 ```
 
 #### Response (200 OK)
+
 ```json
 {
   "message": "Tickets obtenidos exitosamente",
@@ -191,6 +211,7 @@ Authorization: Bearer {token}
 ```
 
 #### ⚠️ Importante para Frontend
+
 - Los tickets están ordenados por fecha de creación (más reciente primero)
 - El campo `status` puede ser: `ACTIVE`, `USED`, `CANCELLED`, `TRANSFERRED`
 - `usedAt` es `null` si el ticket no ha sido usado
@@ -199,18 +220,22 @@ Authorization: Bearer {token}
 ---
 
 ### 3. GET /tickets/:id
+
 **Obtener detalles completos de un ticket**
 
 #### Autenticación
+
 ✅ Requerida (Bearer Token)
 
 #### Request
+
 ```http
 GET /tickets/1
 Authorization: Bearer {token}
 ```
 
 #### Response (200 OK)
+
 ```json
 {
   "message": "Ticket obtenido exitosamente",
@@ -244,9 +269,11 @@ Authorization: Bearer {token}
 ```
 
 #### Errores posibles
+
 - `404` - Ticket no encontrado o no pertenece al usuario
 
 #### ⚠️ Importante para Frontend
+
 - Solo se pueden obtener tickets del usuario autenticado
 - Incluye información completa del evento y venue
 - Útil para mostrar la página de detalle del ticket
@@ -254,12 +281,15 @@ Authorization: Bearer {token}
 ---
 
 ### 4. POST /tickets/verify
+
 **Verificar validez de un código QR**
 
 #### Autenticación
+
 ✅ Requerida (Bearer Token)
 
 #### Request
+
 ```http
 POST /tickets/verify
 Authorization: Bearer {token}
@@ -271,6 +301,7 @@ Content-Type: application/json
 ```
 
 #### Response (200 OK) - Ticket válido
+
 ```json
 {
   "message": "QR verificado exitosamente",
@@ -302,6 +333,7 @@ Content-Type: application/json
 ```
 
 #### Response (200 OK) - Ticket inválido (ya usado)
+
 ```json
 {
   "message": "QR verificado exitosamente",
@@ -320,10 +352,12 @@ Content-Type: application/json
 ```
 
 #### Errores posibles
+
 - `400` - Formato de QR inválido
 - `404` - QR no encontrado en la base de datos
 
 #### ⚠️ Importante para Frontend
+
 - El campo `valid` indica si el ticket puede ser usado (`true` solo si status = ACTIVE)
 - Siempre retorna información del ticket incluso si no es válido
 - Útil para apps de escaneo en la entrada del evento
@@ -331,18 +365,22 @@ Content-Type: application/json
 ---
 
 ### 5. POST /tickets/:id/use
+
 **Marcar ticket como usado**
 
 #### Autenticación
+
 ✅ Requerida (Bearer Token)
 
 #### Request
+
 ```http
 POST /tickets/1/use
 Authorization: Bearer {token}
 ```
 
 #### Response (200 OK)
+
 ```json
 {
   "message": "Ticket marcado como usado exitosamente",
@@ -359,11 +397,13 @@ Authorization: Bearer {token}
 ```
 
 #### Errores posibles
+
 - `400` - Ticket ya fue usado
 - `400` - Ticket no está en estado ACTIVE
 - `404` - Ticket no encontrado
 
 #### ⚠️ Importante para Frontend
+
 - Este endpoint se usa al escanear el ticket en la entrada
 - Una vez marcado como USED, no puede volver a usarse
 - El campo `usedAt` registra la fecha y hora exacta del uso
@@ -379,6 +419,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 ### Cómo obtener el token:
+
 ```http
 POST /usuarios/login
 Content-Type: application/json
@@ -390,6 +431,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "type": "bearer",
@@ -407,47 +449,56 @@ Content-Type: application/json
 
 ## 📊 Códigos de Estado HTTP
 
-| Código | Significado | Cuándo ocurre |
-|--------|-------------|---------------|
-| 200 | OK | Operación exitosa |
-| 400 | Bad Request | Validación fallida, datos inválidos |
-| 401 | Unauthorized | Token inválido o ausente |
-| 404 | Not Found | Recurso no encontrado |
-| 500 | Internal Server Error | Error del servidor |
+| Código | Significado           | Cuándo ocurre                       |
+| ------ | --------------------- | ----------------------------------- |
+| 200    | OK                    | Operación exitosa                   |
+| 400    | Bad Request           | Validación fallida, datos inválidos |
+| 401    | Unauthorized          | Token inválido o ausente            |
+| 404    | Not Found             | Recurso no encontrado               |
+| 500    | Internal Server Error | Error del servidor                  |
 
 ---
 
 ## 🎨 Formato de Datos
 
 ### Fechas
+
 Todas las fechas están en formato **ISO 8601** con timezone:
+
 ```
 2025-12-15T20:00:00.000-03:00
 ```
 
 **Parsing en JavaScript:**
+
 ```javascript
-const eventDate = new Date("2025-12-15T20:00:00.000-03:00");
+const eventDate = new Date('2025-12-15T20:00:00.000-03:00')
 ```
 
 ### Imágenes QR
+
 Las imágenes QR están en formato **Data URL (base64)**:
+
 ```
 data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
 ```
 
 **Uso en HTML:**
+
 ```html
 <img src="{qrImageUrl}" alt="QR Code" width="300" height="300" />
 ```
 
 **Uso en React:**
+
 ```jsx
 <img src={ticket.qrImageUrl} alt="QR Code" style={{ width: 300, height: 300 }} />
 ```
 
 ### Código QR (String)
+
 Formato: `{ticketId}-{eventId}-{userId}-{UUID}`
+
 ```
 1-10-5-550e8400-e29b-41d4-a716-446655440000
 ```
@@ -457,19 +508,24 @@ Formato: `{ticketId}-{eventId}-{userId}-{UUID}`
 ## 🔄 Flujo de Usuario Completo
 
 ### 1. Usuario realiza una reserva
-*(Endpoint de reservas - no implementado en este sprint)*
+
+_(Endpoint de reservas - no implementado en este sprint)_
+
 ```
 Crea una reserva con estado PENDING
 ```
 
 ### 2. Usuario procesa el pago
+
 ```http
 POST /tickets/pay
 {
   "reservation_id": 123
 }
 ```
+
 **Resultado:**
+
 - Reserva cambia a estado PAID
 - Se crea un registro de pago (APPROVED)
 - Se generan N tickets (según cantidad de la reserva)
@@ -477,40 +533,52 @@ POST /tickets/pay
 - **📧 Se envía email de confirmación automáticamente**
 
 ### 3. Usuario ve sus tickets
+
 ```http
 GET /tickets
 ```
+
 **UI sugerida:**
+
 - Lista de tarjetas con: evento, fecha, QR preview
 - Botón "Ver detalle" para cada ticket
 
 ### 4. Usuario ve detalle de un ticket
+
 ```http
 GET /tickets/1
 ```
+
 **UI sugerida:**
+
 - QR code grande y prominente
 - Información del evento
 - Información del venue
 - Botón "Descargar QR" o "Compartir"
 
 ### 5. Personal del evento escanea el QR
+
 ```http
 POST /tickets/verify
 {
   "qr_code": "1-10-5-uuid..."
 }
 ```
+
 **UI sugerida:**
+
 - Scanner de QR
 - Mostrar resultado: ✅ Válido / ❌ Inválido
 - Si válido, mostrar datos del usuario y evento
 
 ### 6. Personal permite el ingreso
+
 ```http
 POST /tickets/1/use
 ```
+
 **Resultado:**
+
 - Ticket marcado como USED
 - Ya no puede volver a usarse
 
@@ -519,128 +587,124 @@ POST /tickets/1/use
 ## 💡 Ejemplos de Integración Frontend
 
 ### React - Listar Tickets
+
 ```jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
 
 function MyTickets() {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tickets, setTickets] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token')
         const response = await fetch('http://localhost:3333/tickets', {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
-        setTickets(data.data);
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        const data = await response.json()
+        setTickets(data.data)
       } catch (error) {
-        console.error('Error fetching tickets:', error);
+        console.error('Error fetching tickets:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchTickets();
-  }, []);
+    fetchTickets()
+  }, [])
 
-  if (loading) return <div>Cargando tickets...</div>;
+  if (loading) return <div>Cargando tickets...</div>
 
   return (
     <div className="tickets-list">
-      {tickets.map(ticket => (
+      {tickets.map((ticket) => (
         <div key={ticket.id} className="ticket-card">
           <h3>{ticket.event.title}</h3>
           <p>{new Date(ticket.event.datetime).toLocaleString()}</p>
-          <img 
-            src={ticket.qrImageUrl} 
-            alt="QR Code" 
-            width="200" 
-            height="200"
-          />
-          <span className={`status ${ticket.status.toLowerCase()}`}>
-            {ticket.status}
-          </span>
+          <img src={ticket.qrImageUrl} alt="QR Code" width="200" height="200" />
+          <span className={`status ${ticket.status.toLowerCase()}`}>{ticket.status}</span>
         </div>
       ))}
     </div>
-  );
+  )
 }
 ```
 
 ### React - Procesar Pago
+
 ```jsx
 async function processPayment(reservationId) {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token')
     const response = await fetch('http://localhost:3333/tickets/pay', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ reservation_id: reservationId })
-    });
+      body: JSON.stringify({ reservation_id: reservationId }),
+    })
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message);
+      const error = await response.json()
+      throw new Error(error.message)
     }
 
-    const data = await response.json();
-    console.log('Tickets generados:', data.data.tickets);
-    
+    const data = await response.json()
+    console.log('Tickets generados:', data.data.tickets)
+
     // Redirigir a la página de tickets
-    window.location.href = '/mis-tickets';
+    window.location.href = '/mis-tickets'
   } catch (error) {
-    alert('Error al procesar el pago: ' + error.message);
+    alert('Error al procesar el pago: ' + error.message)
   }
 }
 ```
 
 ### React - Verificar QR (App de escaneo)
+
 ```jsx
-import QrScanner from 'qr-scanner'; // librería de ejemplo
+import QrScanner from 'qr-scanner' // librería de ejemplo
 
 function QRVerifier() {
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(null)
 
   const handleScan = async (qrCode) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       const response = await fetch('http://localhost:3333/tickets/verify', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ qr_code: qrCode })
-      });
+        body: JSON.stringify({ qr_code: qrCode }),
+      })
 
-      const data = await response.json();
-      setResult(data.data);
+      const data = await response.json()
+      setResult(data.data)
 
       if (data.data.valid) {
         // Ticket válido - permitir ingreso
-        await markTicketAsUsed(data.data.ticket.id);
+        await markTicketAsUsed(data.data.ticket.id)
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error:', error)
     }
-  };
+  }
 
   const markTicketAsUsed = async (ticketId) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token')
     await fetch(`http://localhost:3333/tickets/${ticketId}/use`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-  };
+        Authorization: `Bearer ${token}`,
+      },
+    })
+  }
 
   return (
     <div>
@@ -648,12 +712,14 @@ function QRVerifier() {
       {result && (
         <div className={result.valid ? 'valid' : 'invalid'}>
           {result.valid ? '✅ Ticket Válido' : '❌ Ticket Inválido'}
-          <p>Usuario: {result.owner.firstName} {result.owner.lastName}</p>
+          <p>
+            Usuario: {result.owner.firstName} {result.owner.lastName}
+          </p>
           <p>Evento: {result.event.title}</p>
         </div>
       )}
     </div>
-  );
+  )
 }
 ```
 
@@ -731,33 +797,35 @@ function QRVerifier() {
 ## 📱 Consideraciones para Apps Móviles
 
 ### Scanner de QR
+
 Se recomienda usar librerías nativas para mejor rendimiento:
 
 **React Native:**
+
 - `react-native-qrcode-scanner`
 - `react-native-camera`
 
 **Flutter:**
+
 - `qr_code_scanner`
 - `mobile_scanner`
 
 ### Mostrar QR
+
 Los QR en base64 funcionan perfectamente en mobile:
 
 ```jsx
 // React Native
-<Image 
-  source={{ uri: ticket.qrImageUrl }} 
-  style={{ width: 300, height: 300 }}
-/>
+<Image source={{ uri: ticket.qrImageUrl }} style={{ width: 300, height: 300 }} />
 ```
 
 ### Almacenamiento Local
+
 Considerar guardar los tickets en caché para acceso offline:
 
 ```javascript
 // AsyncStorage en React Native
-await AsyncStorage.setItem('tickets', JSON.stringify(tickets));
+await AsyncStorage.setItem('tickets', JSON.stringify(tickets))
 ```
 
 ---
@@ -765,12 +833,14 @@ await AsyncStorage.setItem('tickets', JSON.stringify(tickets));
 ## ⚡ Performance
 
 ### Optimizaciones implementadas:
+
 - ✅ Índices en BD para búsquedas rápidas
 - ✅ Transacciones para consistencia
 - ✅ Eager loading de relaciones (preload)
 - ✅ QR en base64 (sin llamadas adicionales)
 
 ### Recomendaciones Frontend:
+
 - Cachear la lista de tickets
 - Lazy loading de imágenes QR
 - Mostrar skeleton loaders durante carga
@@ -781,6 +851,7 @@ await AsyncStorage.setItem('tickets', JSON.stringify(tickets));
 ## 🔒 Seguridad
 
 ### Implementado:
+
 - ✅ Autenticación Bearer Token obligatoria
 - ✅ Validación de propietario (solo ver sus tickets)
 - ✅ QR únicos con UUID (imposibles de duplicar)
@@ -788,6 +859,7 @@ await AsyncStorage.setItem('tickets', JSON.stringify(tickets));
 - ✅ Validación de estado antes de usar ticket
 
 ### Recomendaciones Frontend:
+
 - Nunca mostrar tokens en logs
 - Limpiar token al hacer logout
 - Manejar expiración de token (401)
@@ -829,15 +901,18 @@ MAIL_FROM_ADDRESS=noreply@api-entradas.com
 #### Proveedores SMTP Compatibles
 
 **Gmail:**
+
 ```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=tu-cuenta@gmail.com
 SMTP_PASSWORD=tu-app-password
 ```
+
 ⚠️ Nota: En Gmail debes generar una "Contraseña de aplicación" si tienes 2FA activado.
 
 **Outlook/Hotmail:**
+
 ```env
 SMTP_HOST=smtp-mail.outlook.com
 SMTP_PORT=587
@@ -846,6 +921,7 @@ SMTP_PASSWORD=tu-password
 ```
 
 **SendGrid:**
+
 ```env
 SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
@@ -854,6 +930,7 @@ SMTP_PASSWORD=tu-sendgrid-api-key
 ```
 
 **Mailtrap (Testing):**
+
 ```env
 SMTP_HOST=sandbox.smtp.mailtrap.io
 SMTP_PORT=2525
@@ -864,6 +941,7 @@ SMTP_PASSWORD=tu-mailtrap-password
 ### Email de Confirmación de Compra
 
 #### ¿Cuándo se envía?
+
 El email se envía **automáticamente** al completar exitosamente el pago en el endpoint `POST /tickets/pay`.
 
 #### Contenido del Email
@@ -898,6 +976,7 @@ El email incluye:
 #### Formato del Email
 
 El email está diseñado con **HTML profesional** que incluye:
+
 - ✅ Diseño responsive (funciona en móviles)
 - ✅ Colores corporativos atractivos
 - ✅ Tablas para información estructurada
@@ -961,7 +1040,9 @@ El email está diseñado con **HTML profesional** que incluye:
 ### Modo Desarrollo vs Producción
 
 #### Modo Desarrollo (Sin SMTP configurado)
+
 Si **NO** configuras las variables SMTP, el sistema funciona en modo desarrollo:
+
 - ✅ No envía emails reales
 - ✅ Muestra los datos en la consola del servidor
 - ✅ Útil para testing local sin configurar SMTP
@@ -978,7 +1059,9 @@ Amount: 5000
 ```
 
 #### Modo Producción (Con SMTP configurado)
+
 Si configuras las variables SMTP correctamente:
+
 - ✅ Envía emails reales a los usuarios
 - ✅ Los usuarios reciben el email en su bandeja de entrada
 - ✅ Incluye todos los códigos QR como adjuntos
@@ -987,6 +1070,7 @@ Si configuras las variables SMTP correctamente:
 ### Manejo de Errores
 
 El sistema de emails es **no bloqueante**:
+
 - ✅ Si el email falla, el pago sigue procesándose correctamente
 - ✅ El usuario recibe sus tickets en la respuesta HTTP
 - ✅ Los errores se loguean en consola para debugging
@@ -1003,11 +1087,13 @@ mailService.sendPurchaseConfirmation(emailData).catch((error) => {
 ### Testing del Sistema de Emails
 
 #### Opción 1: Modo Desarrollo
+
 1. No configurar variables SMTP
 2. Hacer un `POST /tickets/pay`
 3. Ver el log en la consola del servidor
 
 #### Opción 2: Mailtrap (Recomendado para testing)
+
 1. Crear cuenta gratuita en [Mailtrap.io](https://mailtrap.io)
 2. Obtener credenciales SMTP de tu inbox de testing
 3. Configurar en `.env`
@@ -1015,6 +1101,7 @@ mailService.sendPurchaseConfirmation(emailData).catch((error) => {
 5. Ver emails con formato completo en la interfaz web de Mailtrap
 
 #### Opción 3: Email Real
+
 1. Configurar con Gmail/Outlook
 2. Hacer un pago real
 3. Verificar en tu bandeja de entrada
@@ -1027,7 +1114,7 @@ El servicio está implementado en `app/services/mail_service.ts` con los siguien
 class MailService {
   // Enviar email de confirmación de compra
   async sendPurchaseConfirmation(data: PurchaseConfirmationData): Promise<boolean>
-  
+
   // Verificar conexión SMTP
   async testConnection(): Promise<boolean>
 }
@@ -1044,26 +1131,24 @@ await mailService.sendPurchaseConfirmation({
   user: {
     firstName: 'Juan',
     lastName: 'Pérez',
-    email: 'juan@example.com'
+    email: 'juan@example.com',
   },
   event: {
     title: 'Concierto Rock',
     description: 'Descripción del evento',
     datetime: DateTime.now(),
     venue: { name: 'Luna Park', address: 'Av. Corrientes 1234' },
-    price: 2500
+    price: 2500,
   },
-  tickets: [
-    { id: 1, qrCode: '1-10-5-uuid', qrImageUrl: 'data:image/png;base64,...' }
-  ],
+  tickets: [{ id: 1, qrCode: '1-10-5-uuid', qrImageUrl: 'data:image/png;base64,...' }],
   payment: {
     amount: 5000,
-    externalRef: 'PAY-123'
+    externalRef: 'PAY-123',
   },
   reservation: {
     id: 123,
-    quantity: 2
-  }
+    quantity: 2,
+  },
 })
 ```
 
@@ -1072,6 +1157,7 @@ await mailService.sendPurchaseConfirmation({
 Si deseas personalizar el diseño del email, edita el método `generatePurchaseConfirmationHTML()` en `app/services/mail_service.ts`.
 
 Elementos personalizables:
+
 - Colores del header (gradiente)
 - Logo de la empresa
 - Textos de instrucciones
@@ -1095,6 +1181,7 @@ Para sprints futuros, se podría agregar:
 ## �🚀 Próximos Sprints Sugeridos
 
 ### Funcionalidades pendientes:
+
 1. **Transferencia de tickets** - Enviar ticket a otro usuario
 2. **Reembolsos** - Cancelar compra y devolver dinero
 3. **Notificaciones** - Email/Push con tickets comprados
@@ -1143,30 +1230,33 @@ No se validaba la cantidad de tickets ni el stock disponible antes de procesar e
 #### Validaciones agregadas:
 
 1. **Cantidad positiva:**
+
    ```typescript
    if (reservation.quantity <= 0) {
      return response.badRequest({
-       message: 'La cantidad de tickets debe ser mayor a 0'
+       message: 'La cantidad de tickets debe ser mayor a 0',
      })
    }
    ```
 
 2. **Límite máximo por compra (10 tickets):**
+
    ```typescript
    const MAX_TICKETS_PER_PURCHASE = 10
-   
+
    if (reservation.quantity > MAX_TICKETS_PER_PURCHASE) {
      return response.badRequest({
-       message: `No se pueden comprar más de ${MAX_TICKETS_PER_PURCHASE} tickets por transacción`
+       message: `No se pueden comprar más de ${MAX_TICKETS_PER_PURCHASE} tickets por transacción`,
      })
    }
    ```
 
 3. **Verificación de stock disponible:**
+
    ```typescript
    if (reservation.event.ticketsAvailable < reservation.quantity) {
      return response.badRequest({
-       message: `No hay suficientes tickets disponibles. Disponibles: ${reservation.event.ticketsAvailable}, solicitados: ${reservation.quantity}`
+       message: `No hay suficientes tickets disponibles. Disponibles: ${reservation.event.ticketsAvailable}, solicitados: ${reservation.quantity}`,
      })
    }
    ```
@@ -1179,6 +1269,7 @@ No se validaba la cantidad de tickets ni el stock disponible antes de procesar e
    ```
 
 **Beneficios:**
+
 - ✅ Previene compras de 0 o cantidades negativas
 - ✅ Evita compras masivas (límite de 10 tickets por transacción)
 - ✅ Garantiza que hay stock disponible antes de procesar el pago
@@ -1186,6 +1277,7 @@ No se validaba la cantidad de tickets ni el stock disponible antes de procesar e
 - ✅ Previene overselling (vender más tickets de los disponibles)
 
 **Flujo de validación actualizado:**
+
 ```
 POST /tickets/pay
      ↓
@@ -1212,6 +1304,7 @@ El campo `datetime` guardaba fecha Y hora (timestamp), pero solo se necesitaba l
 #### En `app/models/event.ts`:
 
 **ANTES (con errores):**
+
 ```typescript
 ver de ponerle date solo y que los ordene ascendente
 @column.dateTime()
@@ -1219,6 +1312,7 @@ declare datetime:asda DateTime
 ```
 
 **DESPUÉS (correcto):**
+
 ```typescript
 @column.date({
   serialize: (value: DateTime) => {
@@ -1230,6 +1324,7 @@ declare datetime: DateTime
 ```
 
 #### Scope para ordenamiento ascendente:
+
 ```typescript
 /**
  * Query scope to order events by date in ascending order
@@ -1243,16 +1338,19 @@ static orderByDate = scope((query) => {
 #### En `database/migrations/1759770890321_create_create_events_table.ts`:
 
 **ANTES:**
+
 ```typescript
 table.timestamp('datetime', { useTz: true }).notNullable()
 ```
 
 **DESPUÉS:**
+
 ```typescript
 table.date('datetime').notNullable()
 ```
 
 **Beneficios:**
+
 - ✅ Guarda solo la fecha (sin hora): `2025-12-15`
 - ✅ Serializa automáticamente en formato ISO: `2025-12-15`
 - ✅ Scope para ordenar eventos ascendentemente por fecha
@@ -1260,9 +1358,10 @@ table.date('datetime').notNullable()
 - ✅ Simplifica comparaciones de fechas
 
 **Uso del scope en consultas:**
+
 ```typescript
 // Obtener eventos ordenados por fecha ascendente
-const events = await Event.query().apply(scopes => scopes.orderByDate())
+const events = await Event.query().apply((scopes) => scopes.orderByDate())
 
 // O manualmente
 const events = await Event.query().orderBy('datetime', 'asc')
@@ -1279,14 +1378,15 @@ Había confusión sobre si el endpoint `verify` cambiaba el estado del ticket al
 
 #### Diferenciación clara de endpoints:
 
-| Endpoint | ¿Modifica el ticket? | Propósito |
-|----------|---------------------|-----------|
-| `POST /tickets/verify` | ❌ **NO** | Solo **consulta** si el QR es válido |
-| `POST /tickets/:id/use` | ✅ **SÍ** | **Marca** el ticket como USED |
+| Endpoint                | ¿Modifica el ticket? | Propósito                            |
+| ----------------------- | -------------------- | ------------------------------------ |
+| `POST /tickets/verify`  | ❌ **NO**            | Solo **consulta** si el QR es válido |
+| `POST /tickets/:id/use` | ✅ **SÍ**            | **Marca** el ticket como USED        |
 
 #### Comentarios mejorados en el código:
 
 **Endpoint verify:**
+
 ```typescript
 /**
  * POST /tickets/verify
@@ -1296,12 +1396,12 @@ Había confusión sobre si el endpoint `verify` cambiaba el estado del ticket al
  */
 async verify({ request, response }: HttpContext) {
   // ... código ...
-  
+
   // Check if ticket is valid (ACTIVE status)
   // NOTE: This endpoint ONLY checks the validity, it does NOT change the ticket status
   // The ticket status is only changed when using the /tickets/:id/use endpoint
   const isActive = ticket.status.code === 'ACTIVE'
-  
+
   return response.ok({
     message: 'QR verificado exitosamente',
     data: {
@@ -1313,6 +1413,7 @@ async verify({ request, response }: HttpContext) {
 ```
 
 **Endpoint use:**
+
 ```typescript
 /**
  * POST /tickets/:id/use
@@ -1322,7 +1423,7 @@ async verify({ request, response }: HttpContext) {
  */
 async use({ params, response }: HttpContext) {
   // ... validaciones ...
-  
+
   // 🔴 CAMBIAR STATUS A "USED" 🔴
   ticket.statusId = usedStatus.id
   ticket.usedAt = DateTime.now()
@@ -1331,6 +1432,7 @@ async use({ params, response }: HttpContext) {
 ```
 
 **Beneficios:**
+
 - ✅ Permite escanear el QR múltiples veces sin "quemar" el ticket
 - ✅ Personal puede confirmar antes de permitir ingreso
 - ✅ Previene errores de escaneo accidental
@@ -1371,6 +1473,7 @@ ticketId-eventId-userId-UUID
 ```
 
 **Ejemplo real:**
+
 ```
 1-10-5-550e8400-e29b-41d4-a716-446655440000
 │ │  │ └─────────────────────────────────────── UUID único (crypto.randomUUID)
@@ -1387,7 +1490,7 @@ En `app/services/qr_service.ts`:
 async generateTicketQR(ticketId, eventId, userId) {
   // 1. Crear código único con UUID
   const uniqueCode = `${ticketId}-${eventId}-${userId}-${randomUUID()}`
-  
+
   // 2. Generar imagen QR en base64 (300x300px, PNG)
   const qrImageUrl = await QRCode.toDataURL(uniqueCode, {
     errorCorrectionLevel: 'H',
@@ -1395,7 +1498,7 @@ async generateTicketQR(ticketId, eventId, userId) {
     width: 300,
     margin: 1,
   })
-  
+
   return { qrCode: uniqueCode, qrImageUrl }
 }
 ```
@@ -1408,13 +1511,13 @@ Cuando se escanea el QR, el backend busca en la base de datos:
 // POST /tickets/verify
 async verify({ request, response }) {
   const { qr_code: qrCode } = request.only(['qr_code'])
-  
+
   // 1. Validar formato (debe tener 4 partes separadas por -)
   const qrService = new QrService()
   if (!qrService.verifyQRCode(qrCode)) {
     return response.badRequest({ message: 'Formato de QR inválido' })
   }
-  
+
   // 2. Buscar ticket por el código completo
   const ticket = await Ticket.query()
     .where('qr_code', qrCode)  // ← Búsqueda por código exacto
@@ -1422,10 +1525,10 @@ async verify({ request, response }) {
     .preload('status')
     .preload('owner')
     .firstOrFail()
-  
+
   // 3. Verificar si está activo (NO cambiar estado)
   const isActive = ticket.status.code === 'ACTIVE'
-  
+
   // 4. Retornar información
   return response.ok({
     valid: isActive,
@@ -1446,12 +1549,12 @@ async verify({ request, response }) {
 
 #### Estados del ticket:
 
-| Estado | Código | ¿Puede usarse? | Descripción |
-|--------|--------|----------------|-------------|
-| Activo | `ACTIVE` | ✅ SÍ | Ticket válido y disponible |
-| Usado | `USED` | ❌ NO | Ya fue utilizado para ingresar |
-| Cancelado | `CANCELLED` | ❌ NO | Ticket cancelado (reembolso) |
-| Transferido | `TRANSFERRED` | ❌ NO | Transferido a otro usuario |
+| Estado      | Código        | ¿Puede usarse? | Descripción                    |
+| ----------- | ------------- | -------------- | ------------------------------ |
+| Activo      | `ACTIVE`      | ✅ SÍ          | Ticket válido y disponible     |
+| Usado       | `USED`        | ❌ NO          | Ya fue utilizado para ingresar |
+| Cancelado   | `CANCELLED`   | ❌ NO          | Ticket cancelado (reembolso)   |
+| Transferido | `TRANSFERRED` | ❌ NO          | Transferido a otro usuario     |
 
 #### Transiciones de estado:
 
@@ -1508,6 +1611,7 @@ try {
 ```
 
 **Razón del orden:**
+
 - ✅ El email se envía **después del commit** de la transacción
 - ✅ Si el email falla, el pago ya está guardado (no se pierde)
 - ✅ El email incluye todos los códigos QR de los tickets
@@ -1518,6 +1622,7 @@ try {
 ## 📊 Resumen de Archivos Modificados
 
 ### Archivos editados:
+
 1. ✅ `app/controllers/payments_controller.ts` - Validaciones de cantidad y stock
 2. ✅ `app/models/event.ts` - Campo date + scope de ordenamiento
 3. ✅ `database/migrations/1759770890321_create_create_events_table.ts` - Tipo date
@@ -1525,6 +1630,7 @@ try {
 5. ✅ `app/services/qr_service.ts` - Limpieza de código
 
 ### Documentación creada:
+
 1. ✅ `docs/QR_LOGIC_FLOW.md` - Documentación completa del sistema de QR (500+ líneas)
 
 ---
@@ -1542,6 +1648,7 @@ $ npm run typecheck
 ## 🎯 Conclusión
 
 Sprint 3 completado exitosamente con:
+
 - ✅ 3 Historias de Usuario implementadas
 - ✅ 5 Endpoints REST funcionales
 - ✅ Sistema de emails con HTML profesional
@@ -1558,6 +1665,7 @@ Sprint 3 completado exitosamente con:
 ## 📞 Contacto
 
 Para dudas o consultas sobre la API:
+
 - Revisar documentación en `docs/`
 - Probar endpoints con Postman
 - Verificar logs del servidor en caso de errores

@@ -36,6 +36,7 @@ Authorization: Bearer {tu_token_aquí}
 **Requiere autenticación:** ❌ NO
 
 **Request:**
+
 ```json
 {
   "email": "usuario@example.com",
@@ -44,6 +45,7 @@ Authorization: Bearer {tu_token_aquí}
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "type": "bearer",
@@ -58,12 +60,13 @@ Authorization: Bearer {tu_token_aquí}
 ```
 
 **Uso en el frontend:**
+
 ```javascript
 // Guardar el token al hacer login
 const response = await fetch('http://localhost:3333/usuarios/login', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email, password })
+  body: JSON.stringify({ email, password }),
 })
 const data = await response.json()
 localStorage.setItem('token', data.token)
@@ -71,7 +74,7 @@ localStorage.setItem('token', data.token)
 // Usar el token en todas las peticiones
 const token = localStorage.getItem('token')
 fetch('http://localhost:3333/tickets', {
-  headers: { 'Authorization': `Bearer ${token}` }
+  headers: { Authorization: `Bearer ${token}` },
 })
 ```
 
@@ -87,6 +90,7 @@ fetch('http://localhost:3333/tickets', {
 **Requiere autenticación:** ❌ NO
 
 **Request:**
+
 ```json
 {
   "firstName": "Juan",
@@ -98,6 +102,7 @@ fetch('http://localhost:3333/tickets', {
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "message": "Usuario registrado exitosamente",
@@ -120,12 +125,14 @@ fetch('http://localhost:3333/tickets', {
 **Requiere autenticación:** ✅ SÍ
 
 **Request:**
+
 ```http
 GET /usuarios/me
 Authorization: Bearer {token}
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "id": 5,
@@ -146,12 +153,14 @@ Authorization: Bearer {token}
 **Requiere autenticación:** ✅ SÍ
 
 **Request:**
+
 ```http
 POST /usuarios/logout
 Authorization: Bearer {token}
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "message": "Sesión cerrada exitosamente"
@@ -170,11 +179,13 @@ Authorization: Bearer {token}
 **Requiere autenticación:** ❌ NO (público)
 
 **Query params opcionales:**
+
 - `?fecha=2025-12-15` - Filtrar por fecha
 - `?search=Rock` - Buscar por título
 - `?limit=10&page=1` - Paginación
 
 **Response esperado:**
+
 ```json
 {
   "data": [
@@ -211,11 +222,13 @@ Authorization: Bearer {token}
 **Requiere autenticación:** ❌ NO (público)
 
 **Request:**
+
 ```http
 GET /eventos/10
 ```
 
 **Response esperado:**
+
 ```json
 {
   "id": 10,
@@ -251,6 +264,7 @@ GET /eventos/10
 **Requiere autenticación:** ✅ SÍ
 
 **Request:**
+
 ```json
 {
   "eventId": 10,
@@ -259,6 +273,7 @@ GET /eventos/10
 ```
 
 **Response esperado (201 Created):**
+
 ```json
 {
   "message": "Reserva creada exitosamente",
@@ -276,6 +291,7 @@ GET /eventos/10
 ```
 
 **Notas:**
+
 - La reserva expira en 15-30 minutos (configurable)
 - Debe completarse el pago antes de que expire
 - El stock se reserva temporalmente
@@ -290,6 +306,7 @@ GET /eventos/10
 **Requiere autenticación:** ✅ SÍ
 
 **Response esperado:**
+
 ```json
 {
   "data": [
@@ -323,6 +340,7 @@ GET /eventos/10
 **Propósito:** Procesar el pago de una reserva y generar los tickets con códigos QR únicos.
 
 **Request:**
+
 ```json
 {
   "reservation_id": 123
@@ -330,6 +348,7 @@ GET /eventos/10
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "message": "Pago procesado exitosamente",
@@ -366,6 +385,7 @@ GET /eventos/10
 ```
 
 **Validaciones:**
+
 - ✅ La reserva debe existir
 - ✅ La reserva debe estar en estado `PENDING`
 - ✅ La reserva no debe estar expirada
@@ -408,6 +428,7 @@ GET /eventos/10
 ```
 
 **Notas importantes:**
+
 - Los tickets se generan automáticamente según la cantidad de la reserva
 - Cada ticket tiene un código QR único e irrepetible
 - El `qrImageUrl` es una imagen en base64 (data URL) lista para usar en `<img src="...">`
@@ -426,12 +447,14 @@ GET /eventos/10
 **Propósito:** Obtener todos los tickets del usuario autenticado.
 
 **Request:**
+
 ```http
 GET /tickets
 Authorization: Bearer {token}
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "message": "Tickets obtenidos exitosamente",
@@ -458,6 +481,7 @@ Authorization: Bearer {token}
 ```
 
 **Notas:**
+
 - Los tickets están ordenados por fecha de creación (más reciente primero)
 - El campo `status` puede ser: `ACTIVE`, `USED`, `CANCELLED`, `TRANSFERRED`
 - `usedAt` es `null` si el ticket no ha sido usado
@@ -474,12 +498,14 @@ Authorization: Bearer {token}
 **Propósito:** Obtener información completa de un ticket específico.
 
 **Request:**
+
 ```http
 GET /tickets/1
 Authorization: Bearer {token}
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "message": "Ticket obtenido exitosamente",
@@ -513,6 +539,7 @@ Authorization: Bearer {token}
 ```
 
 **Errores:**
+
 ```json
 // 404 - Ticket no encontrado o no pertenece al usuario
 {
@@ -522,6 +549,7 @@ Authorization: Bearer {token}
 ```
 
 **Notas:**
+
 - Solo se pueden ver tickets propios (del usuario autenticado)
 - Incluye información completa del evento y venue
 
@@ -539,6 +567,7 @@ Authorization: Bearer {token}
 **Propósito:** Verificar si un código QR es válido **SIN cambiar el estado del ticket**. Usar en apps de escaneo para verificar antes de permitir el ingreso.
 
 **Request:**
+
 ```json
 {
   "qr_code": "1-10-5-550e8400-e29b-41d4-a716-446655440000"
@@ -546,6 +575,7 @@ Authorization: Bearer {token}
 ```
 
 **Response - Ticket válido (200 OK):**
+
 ```json
 {
   "message": "QR verificado exitosamente",
@@ -577,6 +607,7 @@ Authorization: Bearer {token}
 ```
 
 **Response - Ticket ya usado (200 OK):**
+
 ```json
 {
   "message": "QR verificado exitosamente",
@@ -595,6 +626,7 @@ Authorization: Bearer {token}
 ```
 
 **Errores:**
+
 ```json
 // 400 - Formato de QR inválido
 {
@@ -610,12 +642,14 @@ Authorization: Bearer {token}
 ```
 
 **⚠️ IMPORTANTE:**
+
 - Este endpoint **NO cambia el estado del ticket**
 - Puede llamarse múltiples veces sin problemas
 - El campo `valid` es `true` solo si `status === 'ACTIVE'`
 - Usar este endpoint para verificar ANTES de marcar como usado
 
 **Flujo recomendado:**
+
 1. Escanear QR con la cámara
 2. Llamar a `POST /tickets/verify`
 3. Mostrar resultado: ✅ Válido o ❌ Inválido
@@ -634,12 +668,14 @@ Authorization: Bearer {token}
 **Propósito:** Marcar un ticket como usado **permanentemente**. Usar SOLO después de verificar el QR y confirmar el ingreso.
 
 **Request:**
+
 ```http
 POST /tickets/1/use
 Authorization: Bearer {token}
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "message": "Ticket marcado como usado exitosamente",
@@ -656,6 +692,7 @@ Authorization: Bearer {token}
 ```
 
 **Errores:**
+
 ```json
 // 400 - Ticket ya fue usado
 {
@@ -678,6 +715,7 @@ Authorization: Bearer {token}
 ```
 
 **⚠️ IMPORTANTE:**
+
 - Este endpoint **SÍ cambia el estado del ticket a USED**
 - El cambio es **permanente** (no se puede revertir)
 - Una vez usado, el ticket no puede volver a usarse
@@ -687,16 +725,16 @@ Authorization: Bearer {token}
 
 ## 📊 Códigos de Estado HTTP
 
-| Código | Significado | Cuándo ocurre |
-|--------|-------------|---------------|
-| `200` | OK | Operación exitosa |
-| `201` | Created | Recurso creado exitosamente |
-| `400` | Bad Request | Validación fallida, datos inválidos |
-| `401` | Unauthorized | Token inválido, ausente o expirado |
-| `403` | Forbidden | Sin permisos para realizar la acción |
-| `404` | Not Found | Recurso no encontrado |
-| `422` | Unprocessable Entity | Error de validación de datos |
-| `500` | Internal Server Error | Error del servidor |
+| Código | Significado           | Cuándo ocurre                        |
+| ------ | --------------------- | ------------------------------------ |
+| `200`  | OK                    | Operación exitosa                    |
+| `201`  | Created               | Recurso creado exitosamente          |
+| `400`  | Bad Request           | Validación fallida, datos inválidos  |
+| `401`  | Unauthorized          | Token inválido, ausente o expirado   |
+| `403`  | Forbidden             | Sin permisos para realizar la acción |
+| `404`  | Not Found             | Recurso no encontrado                |
+| `422`  | Unprocessable Entity  | Error de validación de datos         |
+| `500`  | Internal Server Error | Error del servidor                   |
 
 ---
 
@@ -711,8 +749,9 @@ Authorization: Bearer {token}
 **Ejemplo:** `2025-12-15`
 
 **Parsing en JavaScript:**
+
 ```javascript
-const eventDate = new Date("2025-12-15")
+const eventDate = new Date('2025-12-15')
 console.log(eventDate.toLocaleDateString('es-AR'))
 // Output: "15/12/2025"
 ```
@@ -724,8 +763,9 @@ console.log(eventDate.toLocaleDateString('es-AR'))
 **Ejemplo:** `2025-10-10T15:30:00.000-03:00`
 
 **Parsing en JavaScript:**
+
 ```javascript
-const datetime = new Date("2025-10-10T15:30:00.000-03:00")
+const datetime = new Date('2025-10-10T15:30:00.000-03:00')
 console.log(datetime.toLocaleString('es-AR'))
 // Output: "10/10/2025, 15:30:00"
 ```
@@ -737,16 +777,19 @@ console.log(datetime.toLocaleString('es-AR'))
 **Formato:** `data:image/png;base64,{base64_data}`
 
 **Ejemplo:**
+
 ```
 data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
 ```
 
 **Uso en HTML:**
+
 ```html
 <img src="{qrImageUrl}" alt="QR Code" width="300" height="300" />
 ```
 
 **Uso en React:**
+
 ```jsx
 <img src={ticket.qrImageUrl} alt="QR Code" style={{ width: 300, height: 300 }} />
 ```
@@ -758,6 +801,7 @@ data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
 **Ejemplo:** `1-10-5-550e8400-e29b-41d4-a716-446655440000`
 
 **Componentes:**
+
 - `1` = ID del ticket
 - `10` = ID del evento
 - `5` = ID del usuario propietario
@@ -817,7 +861,7 @@ data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
       - Evento: Concierto Rock 2025
       - Fecha: 15/12/2025
       - [Botón: Permitir Ingreso]
-   
+
    ❌ INVÁLIDO:
       - Estado: USED
       - Usado el: 15/12/2025 20:15
@@ -900,6 +944,7 @@ Colección de ejemplo:
 ```
 
 ### Variables de entorno:
+
 ```
 baseUrl=http://localhost:3333
 token={obtenido del login}
@@ -920,24 +965,24 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    
+
     try {
       const response = await fetch('http://localhost:3333/usuarios/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       })
-      
+
       if (!response.ok) {
         throw new Error('Login fallido')
       }
-      
+
       const data = await response.json()
-      
+
       // Guardar token
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
-      
+
       // Redirigir al dashboard
       window.location.href = '/dashboard'
     } catch (error) {
@@ -982,14 +1027,14 @@ function MyTickets() {
         const token = localStorage.getItem('token')
         const response = await fetch('http://localhost:3333/tickets', {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         })
-        
+
         if (!response.ok) {
           throw new Error('Error al obtener tickets')
         }
-        
+
         const data = await response.json()
         setTickets(data.data)
       } catch (error) {
@@ -1007,24 +1052,18 @@ function MyTickets() {
 
   return (
     <div className="tickets-grid">
-      {tickets.map(ticket => (
+      {tickets.map((ticket) => (
         <div key={ticket.id} className="ticket-card">
           <h3>{ticket.event.title}</h3>
           <p>{new Date(ticket.event.datetime).toLocaleDateString('es-AR')}</p>
-          
-          <img 
-            src={ticket.qrImageUrl} 
-            alt="QR Code"
-            style={{ width: 200, height: 200 }}
-          />
-          
+
+          <img src={ticket.qrImageUrl} alt="QR Code" style={{ width: 200, height: 200 }} />
+
           <span className={`badge ${ticket.status.toLowerCase()}`}>
             {ticket.status === 'ACTIVE' ? '✅ Válido' : '❌ Usado'}
           </span>
-          
-          {ticket.usedAt && (
-            <p>Usado el: {new Date(ticket.usedAt).toLocaleString('es-AR')}</p>
-          )}
+
+          {ticket.usedAt && <p>Usado el: {new Date(ticket.usedAt).toLocaleString('es-AR')}</p>}
         </div>
       ))}
     </div>
@@ -1038,29 +1077,29 @@ function MyTickets() {
 async function processPayment(reservationId) {
   try {
     const token = localStorage.getItem('token')
-    
+
     const response = await fetch('http://localhost:3333/tickets/pay', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ reservation_id: reservationId })
+      body: JSON.stringify({ reservation_id: reservationId }),
     })
-    
+
     if (!response.ok) {
       const error = await response.json()
       throw new Error(error.message || 'Error al procesar el pago')
     }
-    
+
     const data = await response.json()
-    
+
     console.log('Pago exitoso:', data)
     console.log('Tickets generados:', data.data.tickets.length)
-    
+
     // Mostrar mensaje de éxito
     alert(`¡Compra exitosa! Se generaron ${data.data.tickets.length} tickets`)
-    
+
     // Redirigir a mis tickets
     window.location.href = '/mis-tickets'
   } catch (error) {
@@ -1081,20 +1120,20 @@ function QRVerifier() {
   const handleScan = async (qrCode) => {
     try {
       const token = localStorage.getItem('token')
-      
+
       // 1. Verificar el QR
       const response = await fetch('http://localhost:3333/tickets/verify', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ qr_code: qrCode })
+        body: JSON.stringify({ qr_code: qrCode }),
       })
-      
+
       const data = await response.json()
       setTicket(data.data)
-      
+
       if (data.data.valid) {
         setScanResult('valid')
       } else {
@@ -1108,18 +1147,18 @@ function QRVerifier() {
 
   const allowEntry = async () => {
     if (!ticket || !ticket.valid) return
-    
+
     try {
       const token = localStorage.getItem('token')
-      
+
       // 2. Marcar como usado
       await fetch(`http://localhost:3333/tickets/${ticket.ticket.id}/use`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
-      
+
       alert('✅ Ingreso permitido')
       setScanResult(null)
       setTicket(null)
@@ -1131,23 +1170,35 @@ function QRVerifier() {
   return (
     <div>
       <QrScanner onScan={handleScan} />
-      
+
       {ticket && (
         <div className={`result ${scanResult}`}>
           {scanResult === 'valid' ? (
             <div className="valid-ticket">
               <h2>✅ Ticket Válido</h2>
-              <p><strong>Propietario:</strong> {ticket.owner.firstName} {ticket.owner.lastName}</p>
-              <p><strong>Evento:</strong> {ticket.event.title}</p>
-              <p><strong>Fecha:</strong> {new Date(ticket.event.datetime).toLocaleDateString('es-AR')}</p>
+              <p>
+                <strong>Propietario:</strong> {ticket.owner.firstName} {ticket.owner.lastName}
+              </p>
+              <p>
+                <strong>Evento:</strong> {ticket.event.title}
+              </p>
+              <p>
+                <strong>Fecha:</strong>{' '}
+                {new Date(ticket.event.datetime).toLocaleDateString('es-AR')}
+              </p>
               <button onClick={allowEntry}>Permitir Ingreso</button>
             </div>
           ) : (
             <div className="invalid-ticket">
               <h2>❌ Ticket Inválido</h2>
-              <p><strong>Estado:</strong> {ticket.ticket.statusName}</p>
+              <p>
+                <strong>Estado:</strong> {ticket.ticket.statusName}
+              </p>
               {ticket.ticket.usedAt && (
-                <p><strong>Usado el:</strong> {new Date(ticket.ticket.usedAt).toLocaleString('es-AR')}</p>
+                <p>
+                  <strong>Usado el:</strong>{' '}
+                  {new Date(ticket.ticket.usedAt).toLocaleString('es-AR')}
+                </p>
               )}
               <button>Denegar Ingreso</button>
             </div>
@@ -1168,7 +1219,7 @@ function QRVerifier() {
 ```javascript
 const headers = {
   'Authorization': `Bearer ${token}`,
-  'Content-Type': 'application/json'
+  'Content-Type': 'application/json',
 }
 ```
 
@@ -1177,22 +1228,22 @@ const headers = {
 ```javascript
 async function apiRequest(url, options = {}) {
   const token = localStorage.getItem('token')
-  
+
   const response = await fetch(url, {
     ...options,
     headers: {
       ...options.headers,
-      'Authorization': `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   })
-  
+
   if (response.status === 401) {
     // Token expirado
     localStorage.removeItem('token')
     window.location.href = '/login'
     throw new Error('Sesión expirada')
   }
-  
+
   return response
 }
 ```
@@ -1203,7 +1254,7 @@ async function apiRequest(url, options = {}) {
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://localhost:3333'
+  baseURL: 'http://localhost:3333',
 })
 
 // Request interceptor - agregar token

@@ -6,8 +6,20 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id').primary()
-      table.integer('reservation_id').unsigned().notNullable().references('id').inTable('reservations').onDelete('CASCADE')
-      table.integer('status_id').unsigned().notNullable().references('id').inTable('payment_statuses').onDelete('RESTRICT')
+      table
+        .integer('reservation_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('reservations')
+        .onDelete('CASCADE')
+      table
+        .integer('status_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('payment_statuses')
+        .onDelete('RESTRICT')
       table.decimal('amount', 10, 2).notNullable()
       table.string('provider', 100).notNullable()
       table.string('external_ref', 255).nullable()
