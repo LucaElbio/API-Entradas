@@ -39,15 +39,14 @@ router
         router.post('/:id/transfer', '#controllers/Http/tickets_controller.transfer')
         router.post('/:id/transfer/accept', '#controllers/Http/tickets_controller.acceptTransfer')
         router.post('/:id/transfer/reject', '#controllers/Http/tickets_controller.rejectTransfer')
-      
+
         // BE-Endpoint POST /tickets/pay - Process payment and generate tickets
         router.post('/pay', '#controllers/payments_controller.pay')
       })
       .prefix('/tickets')
       .use(middleware.auth())
       .use(middleware.rateLimit())
-  
-    
+
     router
       .group(() => {
         // Reservations endpoints

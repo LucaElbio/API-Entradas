@@ -41,7 +41,11 @@ jest.mock('#models/user', () => ({
 const UsersController = require('#controllers/Http/users_controller').default
 
 // Utilidad simple para mockear HttpContext
-function createHttpContext({ body = {}, headers = {} as Record<string, string>, ip = '127.0.0.1' } = {}) {
+function createHttpContext({
+  body = {},
+  headers = {} as Record<string, string>,
+  ip = '127.0.0.1',
+} = {}) {
   const state: any = { status: 0, body: null }
   const response = {
     created: (data: any) => {
@@ -215,12 +219,17 @@ describe('UsersController - Registro y Login', () => {
     const payload = { email: 'user@example.com', password: 'Wrong' }
 
     mockLoginValidate.mockResolvedValueOnce({ ...payload })
-    mockVerifyCredentials.mockRejectedValueOnce(new Error('E_INVALID_AUTH_UID: Invalid credentials'))
+    mockVerifyCredentials.mockRejectedValueOnce(
+      new Error('E_INVALID_AUTH_UID: Invalid credentials')
+    )
 
     const ctx = createHttpContext({ body: payload })
     const res = await controller.login(ctx as any)
 
     expect(res.statusCode).toBe(400)
-    expect(res.body).toMatchObject({ message: 'Credenciales inválidas', error: 'INVALID_CREDENTIALS' })
+    expect(res.body).toMatchObject({
+      message: 'Credenciales inválidas',
+      error: 'INVALID_CREDENTIALS',
+    })
   })
 })

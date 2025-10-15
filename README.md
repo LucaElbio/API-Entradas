@@ -69,6 +69,7 @@ El servidor iniciará en `http://localhost:3333`
 ## 🔑 Endpoints Principales
 
 ### Autenticación
+
 - `POST /usuarios/registro` - Registrar nuevo usuario
 - `POST /usuarios/login` - Iniciar sesión
 - `GET /auth/me` - Obtener usuario autenticado
@@ -76,12 +77,14 @@ El servidor iniciará en `http://localhost:3333`
 - `POST /auth/refresh` - Refrescar token
 
 ### Reservaciones
+
 - `POST /reservations` - Crear nueva reserva
 - `GET /reservations` - Listar mis reservas
 - `GET /reservations/:id` - Ver reserva específica
 - `DELETE /reservations/:id` - Cancelar reserva
 
 ### Pagos y Tickets
+
 - `POST /tickets/pay` - Procesar pago y generar tickets
 - `GET /tickets` - Listar mis tickets
 - `GET /tickets/:id` - Ver ticket específico
@@ -100,6 +103,7 @@ El servidor iniciará en `http://localhost:3333`
 ## ⏰ Sistema de Expiración Automática
 
 El sistema incluye un cron job que se ejecuta cada minuto para:
+
 - Buscar reservas pendientes que expiraron
 - Cambiar su estado a EXPIRED
 - Devolver tickets al stock del evento
@@ -181,6 +185,7 @@ API-Entradas/
 ## 🛡️ Control de Concurrencia
 
 El sistema implementa:
+
 - Transacciones de base de datos
 - Row locking (`forUpdate()`)
 - Validaciones atómicas

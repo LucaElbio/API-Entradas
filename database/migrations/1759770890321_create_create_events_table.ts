@@ -6,10 +6,34 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id').primary()
-      table.integer('company_id').unsigned().notNullable().references('id').inTable('companies').onDelete('CASCADE')
-      table.integer('venue_id').unsigned().notNullable().references('id').inTable('venues').onDelete('RESTRICT')
-      table.integer('created_by').unsigned().notNullable().references('id').inTable('users').onDelete('RESTRICT')
-      table.integer('status_id').unsigned().notNullable().references('id').inTable('event_statuses').onDelete('RESTRICT')
+      table
+        .integer('company_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('companies')
+        .onDelete('CASCADE')
+      table
+        .integer('venue_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('venues')
+        .onDelete('RESTRICT')
+      table
+        .integer('created_by')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('users')
+        .onDelete('RESTRICT')
+      table
+        .integer('status_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('event_statuses')
+        .onDelete('RESTRICT')
       table.string('title', 255).notNullable()
       table.text('description').notNullable()
       table.date('datetime').notNullable()

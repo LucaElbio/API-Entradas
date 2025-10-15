@@ -21,7 +21,7 @@
 2. **Base de Datos**: ✅ FUNCIONAL
    - ✅ 4 migraciones aplicadas exitosamente:
      - `create_users_table`
-     - `create_access_tokens_table` 
+     - `create_access_tokens_table`
      - `create_companies_table`
      - `create_roles_table`
    - ✅ Seeders ejecutados correctamente
@@ -37,11 +37,13 @@
 ## 🔧 Configuración Técnica
 
 ### Puertos y Conexiones
+
 - **Puerto configurado**: 3333 (modificable en `.env`)
 - **Host**: localhost
 - **Base de datos**: MySQL en puerto 3306
 
 ### Variables de Entorno (`.env`)
+
 ```env
 TZ=UTC
 PORT=3333
@@ -74,6 +76,7 @@ DB_CONNECTION=mysql
 ## 🚀 Endpoints Disponibles
 
 ### 📍 Endpoints Públicos:
+
 ```
 GET  /                     - Health check
 POST /usuarios/registro    - Registro de usuarios
@@ -81,6 +84,7 @@ POST /usuarios/login       - Autenticación (con rate limiting)
 ```
 
 ### 🔒 Endpoints Protegidos (requieren token):
+
 ```
 GET  /auth/me             - Obtener perfil del usuario
 POST /auth/logout         - Cerrar sesión
@@ -92,6 +96,7 @@ POST /auth/refresh        - Renovar token
 ## 💻 Comandos para Desarrollo
 
 ### Iniciar el servidor:
+
 ```bash
 # Modo desarrollo con hot reload
 node ace serve --watch
@@ -104,6 +109,7 @@ cd build && node bin/server.js
 ```
 
 ### Tests:
+
 ```bash
 # Los tests fueron eliminados del proyecto
 # El testing será responsabilidad del equipo de QA
@@ -113,6 +119,7 @@ cd build && node bin/server.js
 ```
 
 ### Base de Datos:
+
 ```bash
 # Verificar estado de migraciones
 node ace migration:status
@@ -131,6 +138,7 @@ node ace db:seed
 ### Headers Requeridos:
 
 #### Para requests públicos:
+
 ```javascript
 {
   'Content-Type': 'application/json'
@@ -138,6 +146,7 @@ node ace db:seed
 ```
 
 #### Para requests autenticados:
+
 ```javascript
 {
   'Content-Type': 'application/json',
@@ -146,6 +155,7 @@ node ace db:seed
 ```
 
 ### Ejemplo de Respuesta de Login:
+
 ```json
 {
   "message": "Inicio de sesión exitoso",
@@ -154,7 +164,7 @@ node ace db:seed
   "user": {
     "id": 1,
     "firstName": "Juan",
-    "lastName": "Pérez", 
+    "lastName": "Pérez",
     "email": "usuario@example.com",
     "dni": "12345678",
     "companyId": 1,
@@ -169,6 +179,7 @@ node ace db:seed
 ## 🎯 Funcionalidades Clave para Frontend
 
 ### ✅ Autenticación Completa:
+
 - Registro de usuarios con validaciones
 - Login con generación de tokens JWT
 - Middleware de autenticación
@@ -176,12 +187,14 @@ node ace db:seed
 - Renovación de tokens
 
 ### ✅ Validaciones de Seguridad:
+
 - Contraseñas con requisitos mínimos de seguridad
 - Rate limiting en login
 - Validación de DNI y email únicos
 - Sanitización de inputs
 
 ### ✅ Manejo de Errores:
+
 - Respuestas consistentes
 - Códigos de estado HTTP apropiados
 - Mensajes de error descriptivos
@@ -196,8 +209,9 @@ node ace db:seed
 El backend está completamente funcional y listo para ser conectado con el frontend. Todos los tests pasan, la base de datos está configurada, y los endpoints responden correctamente.
 
 ### Próximos Pasos:
+
 1. ✅ Backend verificado y funcional
-2. 🔄 Conectar con frontend 
+2. 🔄 Conectar con frontend
 3. 🔄 Realizar tests de integración end-to-end
 4. 🔄 Deploy a producción
 
@@ -206,6 +220,7 @@ El backend está completamente funcional y listo para ser conectado con el front
 ## 📞 Soporte
 
 Para cualquier problema durante la integración con el frontend:
+
 1. Verificar que el servidor esté corriendo: `node ace serve --watch`
 2. Revisar logs del servidor para errores
 3. Confirmar que la base de datos esté conectada
