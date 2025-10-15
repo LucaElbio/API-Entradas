@@ -1,18 +1,26 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, scope } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Company from './company.js'
 import Venue from './venue.js'
+import User from './user.js'
+import EventStatus from './event_status.js'
 
 export default class Event extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column({ columnName: 'company_id' })
+  @column()
   declare companyId: number
 
-  @column({ columnName: 'venue_id' })
+  @column()
   declare venueId: number
+
+  @column()
+  declare createdBy: number
+
+  @column()
+  declare statusId: number
 
   @column()
   declare title: string
@@ -20,13 +28,18 @@ export default class Event extends BaseModel {
   @column()
   declare description: string
 
-  @column.dateTime()
+  @column.date({
+    serialize: (value: DateTime) => {
+      // Serializar solo como fecha (YYYY-MM-DD)
+      return value ? value.toISODate() : null
+    },
+  })
   declare datetime: DateTime
 
-  @column({ columnName: 'tickets_total' })
+  @column()
   declare ticketsTotal: number
 
-  @column({ columnName: 'tickets_available' })
+  @column()
   declare ticketsAvailable: number
 
   @column()
@@ -38,13 +51,27 @@ export default class Event extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Company, {
-    foreignKey: 'companyId',
-  })
+  @belongsTo(() => Company)
   declare company: BelongsTo<typeof Company>
 
-  @belongsTo(() => Venue, {
-    foreignKey: 'venueId',
-  })
+  @belongsTo(() => Venue)
   declare venue: BelongsTo<typeof Venue>
+
+  @belongsTo(() => User, {
+    foreignKey: 'createdBy',
+  })
+  declare creator: BelongsTo<typeof User>
+
+  @belongsTo(() => EventStatus, {
+    foreignKey: 'statusId',
+  })
+  declare status: BelongsTo<typeof EventStatus>
+
+  /**
+   * Query scope to order events by date in ascending order
+   * Usage: Event.query().apply(scopes => scopes.orderByDate())
+   */
+  static orderByDate = scope((query) => {
+    query.orderBy('datetime', 'asc')
+  })
 }
