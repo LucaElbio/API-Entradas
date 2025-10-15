@@ -1,4 +1,3 @@
-import hash from '@adonisjs/core/services/hash'
 import User from '#models/user'
 import type { HttpContext } from '@adonisjs/core/http'
 import { registerUserValidator, loginUserValidator } from '#validators/user_validator'
@@ -23,16 +22,13 @@ export default class UsersController {
         timestamp: new Date().toISOString(),
       })
 
-      // Hashear contraseña
-      const hashedPassword = await hash.make(data.password)
-
       // Crear usuario
       const user = await User.create({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email.toLowerCase(),
         dni: data.dni,
-        password: hashedPassword,
+        password: data.password,
         companyId: data.companyId || 1,
         roleId: data.roleId || 2,
       })
@@ -101,7 +97,7 @@ export default class UsersController {
       })
 
       // Usar el helper de autenticación para validar credenciales
-      const user = await User.verifyCredentials(validatedEmail.toLowerCase(), password)
+      const user = await User.verifyCredentials(validatedEmail, password)
 
       // Crear token de acceso con expiración de 24 horas
       const token = await User.accessTokens.create(user, ['*'], {
@@ -141,7 +137,7 @@ export default class UsersController {
         error: error.message,
         timestamp: new Date().toISOString(),
       })
-
+      logger.warn(error)
       if (error.messages) {
         return response.badRequest({
           message: 'Error de validación',
