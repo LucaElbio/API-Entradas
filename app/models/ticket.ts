@@ -4,6 +4,7 @@ import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Event from './event.js'
 import User from './user.js'
 import TicketTransfer from './ticket_transfer.js'
+import TicketStatus from './ticket_status.js'
 
 export default class Ticket extends BaseModel {
   @column({ isPrimary: true })
@@ -42,6 +43,11 @@ export default class Ticket extends BaseModel {
     foreignKey: 'ownerId',
   })
   declare owner: BelongsTo<typeof User>
+
+  @belongsTo(() => TicketStatus, {
+    foreignKey: 'statusId',
+  })
+  declare status: BelongsTo<typeof TicketStatus>
 
   @hasMany(() => TicketTransfer, {
     foreignKey: 'ticketId',

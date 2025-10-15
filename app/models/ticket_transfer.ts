@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Ticket from './ticket.js'
 import User from './user.js'
+import TransferStatus from './transfer_status.js'
 
 export default class TicketTransfer extends BaseModel {
   @column({ isPrimary: true })
@@ -55,4 +56,9 @@ export default class TicketTransfer extends BaseModel {
     foreignKey: 'toUserId',
   })
   declare toUser: BelongsTo<typeof User>
+
+  @belongsTo(() => TransferStatus, {
+    foreignKey: 'statusId',
+  })
+  declare status: BelongsTo<typeof TransferStatus>
 }

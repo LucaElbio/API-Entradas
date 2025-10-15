@@ -2,9 +2,12 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import crypto from 'node:crypto'
 import Ticket from '../../models/ticket.js'
+import TicketStatus from '../../models/ticket_status.js'
 import TicketTransfer from '../../models/ticket_transfer.js'
+import TransferStatus from '../../models/transfer_status.js'
 import User from '../../models/user.js'
 import db from '@adonisjs/lucid/services/db'
+import QrService from '#services/qr_service'
 
 export default class TicketsController {
   /**
@@ -16,9 +19,10 @@ export default class TicketsController {
       const user = auth.user!
       const now = DateTime.now()
 
-      // Obtener ID del status "active"
-      const activeStatus = await db.from('ticket_statuses').where('code', 'active').first()
-      const usedStatus = await db.from('ticket_statuses').where('code', 'used').first()
+      const [activeStatus, usedStatus] = await Promise.all([
+        TicketStatus.findByOrFail('code', 'ACTIVE'),
+        TicketStatus.findByOrFail('code', 'USED'),
+      ])
 
       // Obtener todas las entradas del usuario
       const tickets = await Ticket.query()
@@ -84,93 +88,88 @@ export default class TicketsController {
    * Iniciar transferencia de entrada
    */
   public async transfer({ auth, params, request, response }: HttpContext) {
+    const trx = await db.transaction()
+
     try {
       const user = auth.user!
-      const ticketId = params.id
+      const ticketId = Number(params.id)
       const { receiverDni } = request.only(['receiverDni'])
 
       if (!receiverDni) {
+        await trx.rollback()
         return response.status(400).json({
           message: 'El DNI del receptor es requerido',
         })
       }
 
-      // Obtener ID del status "active"
-      const activeStatus = await db.from('ticket_statuses').where('code', 'active').first()
-      console.log('DEBUG - activeStatus:', activeStatus)
-      console.log('DEBUG - user.id:', user.id)
-      console.log('DEBUG - ticketId:', ticketId)
+      const now = DateTime.now()
+      const activeStatus = await TicketStatus.findByOrFail('code', 'ACTIVE')
+      const pendingStatus = await TransferStatus.findByOrFail('code', 'PENDING')
 
-      // Primero verificar si el ticket existe sin filtros
-      const ticketExists = await Ticket.query().where('id', ticketId).first()
-      console.log('DEBUG - ticket exists (no filters):', ticketExists ? `ID: ${ticketExists.id}, owner_id: ${ticketExists.ownerId}, status_id: ${ticketExists.statusId}` : 'null')
-
-      // Validar que la entrada exista y pertenezca al usuario
-      const ticket = await Ticket.query()
+      const ticket = await Ticket.query({ client: trx })
         .where('id', ticketId)
         .where('owner_id', user.id)
         .where('status_id', activeStatus.id)
         .preload('event')
         .first()
 
-      console.log('DEBUG - ticket found:', ticket ? `ID: ${ticket.id}` : 'null')
-
       if (!ticket) {
+        await trx.rollback()
         return response.status(404).json({
           message: 'Entrada no encontrada o no te pertenece',
         })
       }
 
-      // Validar que el evento no haya ocurrido
-      if (ticket.event.datetime <= DateTime.now()) {
+      if (ticket.event.datetime <= now) {
+        await trx.rollback()
         return response.status(400).json({
           message: 'No se puede transferir una entrada de un evento que ya ocurrió',
         })
       }
 
-      // Buscar al receptor por DNI
-      const receiver = await User.findBy('dni', receiverDni)
+      const receiver = await User.query({ client: trx }).where('dni', receiverDni).first()
 
       if (!receiver) {
+        await trx.rollback()
         return response.status(404).json({
           message: 'Usuario receptor no encontrado',
         })
       }
 
       if (receiver.id === user.id) {
+        await trx.rollback()
         return response.status(400).json({
           message: 'No puedes transferir una entrada a ti mismo',
         })
       }
 
-      // Obtener ID del status "pending"
-      const pendingStatus = await db.from('transfer_statuses').where('code', 'pending').first()
-
-      // Verificar que no haya una transferencia pendiente
-      const existingTransfer = await TicketTransfer.query()
+      const existingTransfer = await TicketTransfer.query({ client: trx })
         .where('ticket_id', ticketId)
         .where('status_id', pendingStatus.id)
         .first()
 
       if (existingTransfer) {
+        await trx.rollback()
         return response.status(400).json({
           message: 'Ya existe una transferencia pendiente para esta entrada',
         })
       }
 
-      // Crear la transferencia
-      const expiresAt = DateTime.now().plus({ hours: 1 })
+      const transfer = await TicketTransfer.create(
+        {
+          ticketId: ticket.id,
+          fromUserId: user.id,
+          toUserId: receiver.id,
+          statusId: pendingStatus.id,
+          receiverContact: receiverDni,
+          receiverType: 'dni',
+          expiresAt: now.plus({ hours: 12 }),
+          oldQr: ticket.qrCode,
+        },
+        { client: trx }
+      )
 
-      const transfer = await TicketTransfer.create({
-        ticketId: ticket.id,
-        fromUserId: user.id,
-        toUserId: receiver.id,
-        statusId: pendingStatus.id,
-        receiverContact: receiverDni,
-        receiverType: 'dni',
-        expiresAt,
-        oldQr: ticket.qrCode,
-      })
+      await trx.commit()
 
       return response.status(201).json({
         message: 'Solicitud de transferencia enviada',
@@ -186,6 +185,7 @@ export default class TicketsController {
         },
       })
     } catch (error) {
+      await trx.rollback()
       console.error('Error en transfer:', error)
       return response.status(500).json({
         message: 'Error interno del servidor',
@@ -199,16 +199,18 @@ export default class TicketsController {
    * Aceptar transferencia de entrada
    */
   public async acceptTransfer({ auth, params, response }: HttpContext) {
+    const trx = await db.transaction()
+
     try {
       const user = auth.user!
-      const ticketId = params.id
+      const ticketId = Number(params.id)
+      const now = DateTime.now()
 
-      // Obtener IDs de estados
-      const pendingStatus = await db.from('transfer_statuses').where('code', 'pending').first()
-      const acceptedStatus = await db.from('transfer_statuses').where('code', 'accepted').first()
+      const pendingStatus = await TransferStatus.findByOrFail('code', 'PENDING')
+      const acceptedStatus = await TransferStatus.findByOrFail('code', 'ACCEPTED')
+      const expiredStatus = await TransferStatus.findByOrFail('code', 'EXPIRED')
 
-      // Buscar la transferencia pendiente
-      const transfer = await TicketTransfer.query()
+      const transfer = await TicketTransfer.query({ client: trx })
         .where('ticket_id', ticketId)
         .where('to_user_id', user.id)
         .where('status_id', pendingStatus.id)
@@ -218,35 +220,50 @@ export default class TicketsController {
         .first()
 
       if (!transfer) {
+        await trx.rollback()
         return response.status(404).json({
           message: 'Transferencia no encontrada o no autorizada',
         })
       }
 
-      // Verificar que no haya expirado
-      if (transfer.expiresAt <= DateTime.now()) {
-        const expiredStatus = await db.from('transfer_statuses').where('code', 'expired').first()
+      if (transfer.expiresAt <= now) {
+        transfer.useTransaction(trx)
         transfer.statusId = expiredStatus.id
         await transfer.save()
+
+        await trx.commit()
 
         return response.status(400).json({
           message: 'La solicitud de transferencia ha expirado',
         })
       }
 
-      // Generar nuevo QR code
-      const newQrCode = this.generateQrCode()
-
-      // Actualizar la entrada
+      const qrService = new QrService()
       const ticket = transfer.ticket
+      ticket.useTransaction(trx)
+      const reservation = await Reservation.query({ client: trx })
+        .where('id', ticket.reservationId)
+        .preload('status')
+        .preload('event', (eventQuery) => {
+          eventQuery.preload('venue')
+        })
+        .preload('user')
+        .firstOrFail()
+      const { newQrCode } = await qrService.generateTicketQR(
+        ticket.id,
+        reservation.eventId,
+        reservation.userId
+      )
       ticket.ownerId = user.id
       ticket.qrCode = newQrCode
       await ticket.save()
 
-      // Actualizar la transferencia
+      transfer.useTransaction(trx)
       transfer.statusId = acceptedStatus.id
-      transfer.respondedAt = DateTime.now()
+      transfer.respondedAt = now
       await transfer.save()
+
+      await trx.commit()
 
       return response.json({
         message: 'Transferencia aceptada exitosamente',
@@ -262,6 +279,7 @@ export default class TicketsController {
         },
       })
     } catch (error) {
+      await trx.rollback()
       console.error('Error en acceptTransfer:', error)
       return response.status(500).json({
         message: 'Error interno del servidor',
@@ -275,42 +293,48 @@ export default class TicketsController {
    * Rechazar transferencia de entrada
    */
   public async rejectTransfer({ auth, params, response }: HttpContext) {
+    const trx = await db.transaction()
+
     try {
       const user = auth.user!
-      const ticketId = params.id
+      const ticketId = Number(params.id)
+      const now = DateTime.now()
 
-      // Obtener IDs de estados
-      const pendingStatus = await db.from('transfer_statuses').where('code', 'pending').first()
-      const rejectedStatus = await db.from('transfer_statuses').where('code', 'rejected').first()
+      const pendingStatus = await TransferStatus.findByOrFail('code', 'PENDING')
+      const rejectedStatus = await TransferStatus.findByOrFail('code', 'REJECTED')
+      const expiredStatus = await TransferStatus.findByOrFail('code', 'EXPIRED')
 
-      // Buscar la transferencia pendiente
-      const transfer = await TicketTransfer.query()
+      const transfer = await TicketTransfer.query({ client: trx })
         .where('ticket_id', ticketId)
         .where('to_user_id', user.id)
         .where('status_id', pendingStatus.id)
         .first()
 
       if (!transfer) {
+        await trx.rollback()
         return response.status(404).json({
           message: 'Transferencia no encontrada o no autorizada',
         })
       }
 
-      // Verificar que no haya expirado
-      if (transfer.expiresAt <= DateTime.now()) {
-        const expiredStatus = await db.from('transfer_statuses').where('code', 'expired').first()
+      if (transfer.expiresAt <= now) {
+        transfer.useTransaction(trx)
         transfer.statusId = expiredStatus.id
         await transfer.save()
+
+        await trx.commit()
 
         return response.status(400).json({
           message: 'La solicitud de transferencia ha expirado',
         })
       }
 
-      // Actualizar la transferencia
+      transfer.useTransaction(trx)
       transfer.statusId = rejectedStatus.id
-      transfer.respondedAt = DateTime.now()
+      transfer.respondedAt = now
       await transfer.save()
+
+      await trx.commit()
 
       return response.json({
         message: 'Transferencia rechazada',
@@ -319,6 +343,7 @@ export default class TicketsController {
         },
       })
     } catch (error) {
+      await trx.rollback()
       console.error('Error en rejectTransfer:', error)
       return response.status(500).json({
         message: 'Error interno del servidor',
