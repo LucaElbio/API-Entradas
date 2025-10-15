@@ -27,11 +27,28 @@ router
       })
       .prefix('/auth')
       .use(middleware.rateLimit())
+    
+    router
+      .group(() => {
+        // Reservations endpoints
+        router.post('/', '#controllers/reservations_controller.create')
+        router.get('/', '#controllers/reservations_controller.index')
+        router.get('/:id', '#controllers/reservations_controller.show')
+        router.delete('/:id', '#controllers/reservations_controller.cancel')
+      })
+      .prefix('/reservations')
+  
+    router
+      .group(() => {
+        // BE-Endpoint POST /tickets/pay - Process payment and generate tickets
+        router.post('/pay', '#controllers/payments_controller.pay')
+
+        // Tickets endpoints
+        router.get('/', '#controllers/tickets_controller.index')
+        router.get('/:id', '#controllers/tickets_controller.show')
+        router.post('/verify', '#controllers/tickets_controller.verify')
+        router.post('/:id/use', '#controllers/tickets_controller.use')
+      })
+      .prefix('/tickets')
   })
   .prefix('/api')
-
-router.get('/', async () => {
-  return {
-    hello: 'world',
-  }
-})
