@@ -1,14 +1,14 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Company from './company.js'
-import Event from './event.js'
+import User from './user.js'
 
 export default class Venue extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column({ columnName: 'company_id' })
+  @column()
   declare companyId: number
 
   @column()
@@ -20,19 +20,20 @@ export default class Venue extends BaseModel {
   @column()
   declare capacity: number
 
+  @column()
+  declare createdBy: number
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Company, {
-    foreignKey: 'companyId',
-  })
+  @belongsTo(() => Company)
   declare company: BelongsTo<typeof Company>
 
-  @hasMany(() => Event, {
-    foreignKey: 'venueId',
+  @belongsTo(() => User, {
+    foreignKey: 'createdBy',
   })
-  declare events: HasMany<typeof Event>
+  declare creator: BelongsTo<typeof User>
 }
