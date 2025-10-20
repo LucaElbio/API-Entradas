@@ -31,17 +31,17 @@ router
     // Rutas de tickets (requieren autenticación)
     router
       .group(() => {
-        router.get('/', '#controllers/tickets_controller.index')
-        router.get('/:id', '#controllers/tickets_controller.show')
-        router.post('/verify', '#controllers/tickets_controller.verify')
-        router.post('/:id/use', '#controllers/tickets_controller.use')
+        router.get('/', '#controllers/Http/tickets_controller.index')
+        router.get('/:id', '#controllers/Http/tickets_controller.show')
+        router.post('/verify', '#controllers/Http/tickets_controller.verify')
+        router.post('/:id/use', '#controllers/Http/tickets_controller.use')
         router.get('/mine', '#controllers/Http/tickets_controller.mine')
         router.post('/:id/transfer', '#controllers/Http/tickets_controller.transfer')
         router.post('/:id/transfer/accept', '#controllers/Http/tickets_controller.acceptTransfer')
         router.post('/:id/transfer/reject', '#controllers/Http/tickets_controller.rejectTransfer')
 
         // BE-Endpoint POST /tickets/pay - Process payment and generate tickets
-        router.post('/pay', '#controllers/payments_controller.pay')
+        router.post('/pay', '#controllers/Http/payments_controller.pay')
       })
       .prefix('/tickets')
       .use(middleware.auth())
@@ -50,10 +50,10 @@ router
     router
       .group(() => {
         // Reservations endpoints
-        router.post('/', '#controllers/reservations_controller.create')
-        router.get('/', '#controllers/reservations_controller.index')
-        router.get('/:id', '#controllers/reservations_controller.show')
-        router.delete('/:id', '#controllers/reservations_controller.cancel')
+        router.post('/', '#controllers/Http/reservations_controller.create')
+        router.get('/', '#controllers/Http/reservations_controller.index')
+        router.get('/:id', '#controllers/Http/reservations_controller.show')
+        router.delete('/:id', '#controllers/Http/reservations_controller.cancel')
       })
       .prefix('/reservations')
   })
