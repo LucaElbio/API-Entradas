@@ -3,10 +3,12 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
+  moduleDirectories: ['node_modules', '<rootDir>/tests/__mocks__'],
   moduleNameMapper: {
     '^#controllers/(.*)$': '<rootDir>/app/controllers/$1',
     '^#exceptions/(.*)$': '<rootDir>/app/exceptions/$1',
     '^#models/(.*)$': '<rootDir>/app/models/$1',
+    '^#services/(.*)$': '<rootDir>/app/services/$1',
     '^#validators/(.*)$': '<rootDir>/app/validators/$1',
     '^#start/(.*)$': '<rootDir>/start/$1',
     '^#config/(.*)$': '<rootDir>/config/$1',
