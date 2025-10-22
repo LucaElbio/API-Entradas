@@ -11,6 +11,24 @@ router
       })
       .prefix('/events')
 
+    // Rutas de administrador
+    router
+      .group(() => {
+        router.post('/register', '#controllers/Http/admins_controller.register')
+        router.post('/login', '#controllers/Http/admins_controller.login')
+
+        // Rutas protegidas (requieren autenticación)
+        router
+          .group(() => {
+            router.get('/me', '#controllers/Http/admins_controller.me')
+            router.post('/logout', '#controllers/Http/admins_controller.logout')
+            router.post('/refresh', '#controllers/Http/admins_controller.refreshToken')
+          })
+          .use(middleware.auth())
+      })
+      .prefix('/admin')
+      .use(middleware.rateLimit())
+
     router
       .group(() => {
         router.post('/register', '#controllers/Http/users_controller.register')
