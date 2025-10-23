@@ -290,10 +290,9 @@ describe('QrService - Verificación de QR', () => {
 
     const isValid = qrService.verifyQRCode(validQrCode)
 
-    // BUG DETECTADO: El método verifyQRCode() tiene un error de validación
-    // Actualmente solo valida que haya 4 partes, pero el UUID tiene guiones
-    // Ver informe de bugs para más detalles
-    expect(isValid).toBe(false) // Actualmente falla porque verifica incorrectamente
+    // Este código QR tiene el formato correcto (8 partes: 3 IDs + UUID de 5 partes)
+    // DEBERÍA retornar true, pero el bug en verifyQRCode hace que retorne false
+    expect(isValid).toBe(true) // ❌ FALLA por el bug en el backend
   })
 
   it('Debe rechazar un código QR con formato incorrecto (menos partes)', () => {
@@ -325,9 +324,9 @@ describe('QrService - Verificación de QR', () => {
 
     const isValid = qrService.verifyQRCode(result.qrCode)
 
-    // BUG DETECTADO: El método verifyQRCode() no valida correctamente los QR generados
-    // Ver informe de bugs para más detalles
-    expect(isValid).toBe(false) // Actualmente falla por el bug en verifyQRCode
+    // Los QR generados por el servicio DEBERÍAN ser válidos
+    // pero el bug en verifyQRCode hace que fallen la validación
+    expect(isValid).toBe(true) // ❌ FALLA por el bug en el backend
   })
 })
 
