@@ -8,6 +8,7 @@ import Payment from '#models/payment'
 import Ticket from '#models/ticket'
 import QrService from '#services/qr_service'
 import MailService from '#services/mail_service'
+import SalesStatsService from '#services/sales_stats_service'
 import db from '@adonisjs/lucid/services/db'
 
 // Constants
@@ -160,7 +161,16 @@ export default class PaymentsController {
       // 12. Commit transaction (all data saved successfully)
       await trx.commit()
 
-      // 13. Send email with tickets (async, non-blocking)
+      // 13. Emitir actualización de estadísticas en tiempo real
+      try {
+        await SalesStatsService.broadcastEventStats(reservation.eventId)
+        await SalesStatsService.broadcastSalesList()
+        console.log('📊 Sales statistics updated in real-time')
+      } catch (statsError) {
+        console.error('⚠️  Error broadcasting sales stats:', statsError)
+      }
+
+      // 14. Send email with tickets (async, non-blocking)
       // This is done AFTER commit to ensure data consistency
       try {
         const mailService = new MailService()
@@ -200,7 +210,7 @@ export default class PaymentsController {
         console.error('⚠️  Error sending confirmation email:', emailError)
       }
 
-      // 14. Return success response
+      // 15. Return success response
       return response.ok({
         message: 'Pago procesado exitosamente',
         data: {

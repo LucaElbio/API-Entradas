@@ -1,15 +1,30 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
+import transmit from '@adonisjs/transmit/services/main'
+
+// WebSocket endpoint for real-time updates
+transmit.registerRoutes()
 
 // Rutas de eventos
 router
   .group(() => {
+    // Rutas públicas de eventos
     router
       .group(() => {
         router.get('/', '#controllers/Http/events_controller.index')
         router.get('/:id', '#controllers/Http/events_controller.show')
       })
       .prefix('/events')
+
+    // Rutas de administrador - Panel de ventas y estadísticas
+    router
+      .group(() => {
+        router.get('/ventas', '#controllers/Http/events_controller.ventas')
+        router.get('/estadisticas', '#controllers/Http/events_controller.estadisticas')
+      })
+      .prefix('/eventos')
+      .use(middleware.auth())
+      .use(middleware.role({ roles: ['ADMIN'] }))
 
     // Rutas de administrador
     router
