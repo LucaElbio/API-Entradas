@@ -1,15 +1,48 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
+import transmit from '@adonisjs/transmit/services/main'
+
+// WebSocket endpoint for real-time updates
+transmit.registerRoutes()
 
 // Rutas de eventos
 router
   .group(() => {
+    // Rutas públicas de eventos
     router
       .group(() => {
         router.get('/', '#controllers/Http/events_controller.index')
         router.get('/:id', '#controllers/Http/events_controller.show')
       })
       .prefix('/events')
+
+    // Rutas de administrador - Panel de ventas y estadísticas
+    router
+      .group(() => {
+        router.get('/ventas', '#controllers/Http/events_controller.ventas')
+        router.get('/estadisticas', '#controllers/Http/events_controller.estadisticas')
+      })
+      .prefix('/eventos')
+      .use(middleware.auth())
+      .use(middleware.role({ roles: ['ADMIN'] }))
+
+    // Rutas de administrador
+    router
+      .group(() => {
+        router.post('/register', '#controllers/Http/admins_controller.register')
+        router.post('/login', '#controllers/Http/admins_controller.login')
+
+        // Rutas protegidas (requieren autenticación)
+        router
+          .group(() => {
+            router.get('/me', '#controllers/Http/admins_controller.me')
+            router.post('/logout', '#controllers/Http/admins_controller.logout')
+            router.post('/refresh', '#controllers/Http/admins_controller.refreshToken')
+          })
+          .use(middleware.auth())
+      })
+      .prefix('/admin')
+      .use(middleware.rateLimit())
 
     router
       .group(() => {

@@ -60,6 +60,7 @@
     "@adonisjs/core": "^6.19.0",
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.6.1",
+    "@adonisjs/transmit": "^2.0.2",
     "@types/node-cron": "^3.0.11",
     "@vinejs/vine": "^3.0.1",
     "adonis-scheduler": "^3.0.2",
