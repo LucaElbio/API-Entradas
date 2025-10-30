@@ -1,9 +1,10 @@
 import transmit from '@adonisjs/transmit/services/main'
-import db from '@adonisjs/lucid/services/db'
+import Event from '#models/event'
 
 /**
  * Servicio para manejar estadísticas de ventas en tiempo real
  * Utiliza WebSockets (Transmit) para enviar actualizaciones automáticas
+ * Refactorizado para usar Lucid ORM en lugar de queries SQL raw
  */
 export default class SalesStatsService {
   /**
@@ -50,28 +51,33 @@ export default class SalesStatsService {
   }
 
   /**
-   * Obtener estadísticas globales
+   * Obtener estadísticas globales usando Lucid ORM
    */
   private static async getGlobalStats() {
-    const globalStats = await db
-      .from('events')
-      .select(
-        db.raw('COUNT(*) as total_events'),
-        db.raw('SUM(tickets_total) as total_capacity'),
-        db.raw('SUM(tickets_available) as total_available'),
-        db.raw('SUM(tickets_total - tickets_available) as total_sold'),
-        db.raw('SUM((tickets_total - tickets_available) * price) as total_revenue'),
-        db.raw('SUM(tickets_total * price) as potential_revenue')
-      )
-      .first()
+    // Obtener todos los eventos y calcular agregados en memoria
+    // Para datasets grandes, considerar agregar índices o cache
+    const events = await Event.query().select(
+      'tickets_total',
+      'tickets_available',
+      'price'
+    )
 
-    const totalEvents = Number(globalStats?.total_events || 0)
-    const totalCapacity = Number(globalStats?.total_capacity || 0)
-    const totalAvailable = Number(globalStats?.total_available || 0)
-    const totalSold = Number(globalStats?.total_sold || 0)
-    const totalRevenue = Number(globalStats?.total_revenue || 0)
-    const potentialRevenue = Number(globalStats?.potential_revenue || 0)
+    let totalCapacity = 0
+    let totalAvailable = 0
+    let totalSold = 0
+    let totalRevenue = 0
+    let potentialRevenue = 0
 
+    for (const event of events) {
+      const sold = event.ticketsTotal - event.ticketsAvailable
+      totalCapacity += event.ticketsTotal
+      totalAvailable += event.ticketsAvailable
+      totalSold += sold
+      totalRevenue += sold * event.price
+      potentialRevenue += event.ticketsTotal * event.price
+    }
+
+    const totalEvents = events.length
     const globalOccupancyPercentage =
       totalCapacity > 0 ? ((totalSold / totalCapacity) * 100).toFixed(2) : '0.00'
 
@@ -91,39 +97,30 @@ export default class SalesStatsService {
   }
 
   /**
-   * Obtener estadísticas de un evento específico
+   * Obtener estadísticas de un evento específico usando Lucid ORM
    */
   private static async getEventStats(eventId: number) {
-    const event = await db
-      .from('events')
-      .select(
-        'id',
-        'title',
-        'datetime',
-        'price',
-        'tickets_total',
-        'tickets_available',
-        db.raw('(tickets_total - tickets_available) as tickets_sold')
-      )
+    const event = await Event.query()
       .where('id', eventId)
+      .select('id', 'title', 'datetime', 'price', 'tickets_total', 'tickets_available')
       .first()
 
     if (!event) {
       return null
     }
 
-    const ticketsSold = Number(event.tickets_sold)
+    const ticketsSold = event.ticketsTotal - event.ticketsAvailable
     const occupancyPercentage =
-      event.tickets_total > 0 ? ((ticketsSold / event.tickets_total) * 100).toFixed(2) : '0.00'
+      event.ticketsTotal > 0 ? ((ticketsSold / event.ticketsTotal) * 100).toFixed(2) : '0.00'
     const totalRevenue = ticketsSold * event.price
-    const potentialRevenue = event.tickets_total * event.price
+    const potentialRevenue = event.ticketsTotal * event.price
 
     return {
       eventId: event.id,
       title: event.title,
-      datetime: event.datetime,
-      ticketsTotal: event.tickets_total,
-      ticketsAvailable: event.tickets_available,
+      datetime: event.datetime.toISO() || event.datetime.toString(),
+      ticketsTotal: event.ticketsTotal,
+      ticketsAvailable: event.ticketsAvailable,
       ticketsSold,
       occupancyPercentage: Number.parseFloat(occupancyPercentage),
       price: event.price,
@@ -137,42 +134,32 @@ export default class SalesStatsService {
   }
 
   /**
-   * Obtener listado de ventas
+   * Obtener listado de ventas usando Lucid ORM y relaciones
    */
   private static async getSalesList() {
-    const events = await db
-      .from('events')
-      .select(
-        'events.id',
-        'events.title',
-        'events.datetime',
-        'events.price',
-        'events.tickets_total',
-        'events.tickets_available',
-        'companies.name as company_name',
-        'venues.name as venue_name'
-      )
-      .leftJoin('companies', 'events.company_id', 'companies.id')
-      .leftJoin('venues', 'events.venue_id', 'venues.id')
-      .orderBy('events.datetime', 'asc')
+    // Usar preload para cargar company y venue (evita N+1)
+    const events = await Event.query()
+      .preload('company', (query) => query.select('name'))
+      .preload('venue', (query) => query.select('name'))
+      .orderBy('datetime', 'asc')
       .limit(50) // Limitar para no enviar demasiados datos
 
     return events.map((event) => {
-      const ticketsSold = event.tickets_total - event.tickets_available
+      const ticketsSold = event.ticketsTotal - event.ticketsAvailable
       const occupancyPercentage =
-        event.tickets_total > 0 ? ((ticketsSold / event.tickets_total) * 100).toFixed(2) : '0.00'
+        event.ticketsTotal > 0 ? ((ticketsSold / event.ticketsTotal) * 100).toFixed(2) : '0.00'
 
       return {
         id: event.id,
         title: event.title,
-        datetime: event.datetime,
+        datetime: event.datetime.toISO() || event.datetime.toString(),
         price: event.price,
-        ticketsTotal: event.tickets_total,
-        ticketsAvailable: event.tickets_available,
+        ticketsTotal: event.ticketsTotal,
+        ticketsAvailable: event.ticketsAvailable,
         ticketsSold,
         occupancyPercentage: Number.parseFloat(occupancyPercentage),
-        company: event.company_name,
-        venue: event.venue_name,
+        company: event.company?.name || null,
+        venue: event.venue?.name || null,
       }
     })
   }
