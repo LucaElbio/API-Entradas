@@ -8,7 +8,7 @@ export default class AdminsController {
   /**
    * POST /admin/register
    * Registro de administrador
-   * 
+   *
    * Criterios de aceptación:
    * - El formulario de registro debe incluir nombre, apellido, email y contraseña
    * - Validar que el email no esté registrado previamente
@@ -99,7 +99,7 @@ export default class AdminsController {
   /**
    * POST /admin/login
    * Inicio de sesión de administrador (JWT)
-   * 
+   *
    * Criterios de aceptación:
    * - Al iniciar sesión, si las credenciales son correctas, acceder al panel de administrador
    * - Mostrar mensaje de error si los datos son inválidos
@@ -110,9 +110,7 @@ export default class AdminsController {
     const email = request.input('email', '').toLowerCase()
 
     try {
-      const { email: validatedEmail, password } = await loginAdminValidator.validate(
-        request.body()
-      )
+      const { email: validatedEmail, password } = await loginAdminValidator.validate(request.body())
 
       // Log intento de login
       logger.info('Admin login attempt', {
