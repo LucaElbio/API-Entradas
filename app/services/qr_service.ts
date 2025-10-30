@@ -39,6 +39,6 @@ export default class QrService {
   verifyQRCode(qrCode: string): boolean {
     // Basic validation - checks if the code matches expected format
     const parts = qrCode.split('-')
-    return parts.length === 4 && !parts.some((part) => !part)
+    return parts.length === 8 && !parts.some((part) => !part)
   }
 }
