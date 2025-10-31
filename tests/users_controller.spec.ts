@@ -117,11 +117,13 @@ describe('UsersController - Registro y Login', () => {
     const res = await controller.register(ctx as any)
 
     expect(mockRegisterValidate).toHaveBeenCalled()
-    expect(mockHashMake).toHaveBeenCalledWith(payload.password)
+    // Nota: No verificamos hash.make() aquí porque el hashing ocurre en el modelo User
+    // mediante un hook @beforeSave, no directamente en el controlador
     expect(mockUserCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         email: payload.email.toLowerCase(),
         dni: payload.dni,
+        password: payload.password, // Se pasa plano, el modelo lo hashea
       })
     )
     expect(res.statusCode).toBe(201)

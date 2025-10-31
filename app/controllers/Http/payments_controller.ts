@@ -18,23 +18,19 @@ export default class PaymentsController {
    * POST /tickets/pay
    * Process payment for a reservation and generate tickets
    */
-  async pay({ request, response }: HttpContext) {
-    const { reservation_id: reservationId } = request.only(['reservation_id'])
-
-    if (!reservationId) {
-      return response.badRequest({
-        error: 'Validation failed',
-        message: 'El campo reservation_id es requerido',
-      })
-    }
-
+  async pay({ response, auth }: HttpContext) {
     // Use transaction to ensure data consistency
     const trx = await db.transaction()
 
     try {
+      const pendingStatus = await ReservationStatus.query({ client: trx })
+        .where('code', 'PENDING')
+        .firstOrFail()
+
       // 1. Find the reservation with relations
       const reservation = await Reservation.query({ client: trx })
-        .where('id', reservationId)
+        .where('user_id', auth.user!.id)
+        .andWhere('status_id', pendingStatus.id)
         .preload('status')
         .preload('event', (eventQuery) => {
           eventQuery.preload('venue')
@@ -65,11 +61,6 @@ export default class PaymentsController {
           message: `No hay suficientes tickets disponibles. Disponibles: ${reservation.event.ticketsAvailable}, solicitados: ${reservation.quantity}`,
         })
       }
-
-      // 5. Validate reservation status - should be PENDING
-      const pendingStatus = await ReservationStatus.query({ client: trx })
-        .where('code', 'PENDING')
-        .firstOrFail()
 
       if (reservation.statusId !== pendingStatus.id) {
         return response.badRequest({
