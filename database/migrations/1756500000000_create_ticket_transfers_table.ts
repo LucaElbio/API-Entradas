@@ -6,16 +6,11 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table
-        .bigInteger('ticket_id')
-        .unsigned()
-        .references('id')
-        .inTable('tickets')
-        .onDelete('CASCADE')
+      table.integer('ticket_id').unsigned().references('id').inTable('tickets').onDelete('CASCADE')
       table.integer('from_user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
       table.integer('to_user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
       table
-        .bigInteger('status_id')
+        .integer('status_id')
         .unsigned()
         .references('id')
         .inTable('transfer_statuses')
