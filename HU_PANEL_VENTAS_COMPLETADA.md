@@ -20,7 +20,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 
 ## 📊 Endpoints Implementados
 
-### 1. GET /api/eventos/ventas
+### 1. GET /api/admin/events/sales
 - **Descripción:** Listado de eventos con estadísticas de ventas
 - **Autenticación:** Bearer Token (Admin)
 - **Características:**
@@ -29,7 +29,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
   - Columnas: Nombre, Vendidas, Disponibles, % Ocupación
   - Datos de venue y compañía
   
-### 2. GET /api/eventos/estadisticas
+### 2. GET /api/admin/events/statistics
 - **Descripción:** Métricas detalladas del sistema
 - **Autenticación:** Bearer Token (Admin)
 - **Características:**
@@ -63,7 +63,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 
 | Archivo | Cambios |
 |---------|---------|
-| `app/controllers/Http/events_controller.ts` | +169 líneas: métodos `ventas()` y `estadisticas()` |
+| `app/controllers/Http/events_controller.ts` | +169 líneas: métodos `sales()` y `statistics()` |
 | `app/controllers/Http/payments_controller.ts` | +6 líneas: integración con WebSockets |
 | `start/routes.ts` | +10 líneas: rutas protegidas + WebSocket |
 | `API_ENDPOINTS_REFERENCE.md` | +320 líneas: documentación de API |
@@ -137,7 +137,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 ```javascript
 // 1. Obtener datos iniciales
 const token = localStorage.getItem('token')
-const response = await fetch('http://localhost:3333/api/eventos/ventas', {
+const response = await fetch('http://localhost:3333/api/admin/events/sales', {
   headers: { Authorization: `Bearer ${token}` }
 })
 const data = await response.json()
@@ -160,7 +160,7 @@ function SalesDashboard() {
 
   useEffect(() => {
     // Cargar datos iniciales
-    fetch('http://localhost:3333/api/eventos/ventas', {
+  fetch('http://localhost:3333/api/admin/events/sales', {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -222,7 +222,7 @@ function SalesDashboard() {
 
 | # | Criterio | Estado | Evidencia |
 |---|----------|--------|-----------|
-| 1 | Mostrar listado de eventos con columnas requeridas | ✅ | Endpoint `/api/eventos/ventas` |
+| 1 | Mostrar listado de eventos con columnas requeridas | ✅ | Endpoint `/api/admin/events/sales` |
 | 2 | Incorporar visualización gráfica | ✅ | Datos listos para gráficos |
 | 3 | Acceso restringido a administradores | ✅ | Middleware de roles |
 | 4 | Actualización en tiempo real (bonus) | ✅ | WebSockets implementado |
@@ -243,11 +243,11 @@ Content-Type: application/json
 }
 
 # 2. Obtener ventas
-GET http://localhost:3333/api/eventos/ventas
+GET http://localhost:3333/api/admin/events/sales
 Authorization: Bearer {token}
 
 # 3. Obtener estadísticas
-GET http://localhost:3333/api/eventos/estadisticas
+GET http://localhost:3333/api/admin/events/statistics
 Authorization: Bearer {token}
 ```
 

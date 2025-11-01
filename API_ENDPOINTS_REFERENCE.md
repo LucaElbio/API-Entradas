@@ -1291,9 +1291,9 @@ export default api
 
 ### 1. Obtener Listado de Ventas por Evento
 
-**Endpoint:** `/api/eventos/ventas`  
+**Endpoint:** `/api/admin/events/sales`  
 **Método:** `GET`  
-**Ubicación:** `app/controllers/Http/events_controller.ts` → `EventsController.ventas`  
+**Ubicación:** `app/controllers/Http/events_controller.ts` → `EventsController.sales`  
 **Requiere autenticación:** ✅ SÍ  
 **Requiere rol:** `ADMIN`
 
@@ -1307,7 +1307,7 @@ export default api
 
 ```javascript
 const token = localStorage.getItem('token')
-fetch('http://localhost:3333/api/eventos/ventas?page=1&limit=20&sortBy=datetime&order=asc', {
+fetch('http://localhost:3333/api/admin/events/sales?page=1&limit=20&sortBy=datetime&order=asc', {
   headers: { 
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json'
@@ -1355,9 +1355,9 @@ fetch('http://localhost:3333/api/eventos/ventas?page=1&limit=20&sortBy=datetime&
 
 ### 2. Obtener Estadísticas Globales o por Evento
 
-**Endpoint:** `/api/eventos/estadisticas`  
+**Endpoint:** `/api/admin/events/statistics`  
 **Método:** `GET`  
-**Ubicación:** `app/controllers/Http/events_controller.ts` → `EventsController.estadisticas`  
+**Ubicación:** `app/controllers/Http/events_controller.ts` → `EventsController.statistics`  
 **Requiere autenticación:** ✅ SÍ  
 **Requiere rol:** `ADMIN`
 
@@ -1370,7 +1370,7 @@ fetch('http://localhost:3333/api/eventos/ventas?page=1&limit=20&sortBy=datetime&
 
 ```javascript
 const token = localStorage.getItem('token')
-fetch('http://localhost:3333/api/eventos/estadisticas?eventId=1', {
+fetch('http://localhost:3333/api/admin/events/statistics?eventId=1', {
   headers: { 
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json'
@@ -1406,7 +1406,7 @@ fetch('http://localhost:3333/api/eventos/estadisticas?eventId=1', {
 
 ```javascript
 const token = localStorage.getItem('token')
-fetch('http://localhost:3333/api/eventos/estadisticas', {
+fetch('http://localhost:3333/api/admin/events/statistics', {
   headers: { 
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json'

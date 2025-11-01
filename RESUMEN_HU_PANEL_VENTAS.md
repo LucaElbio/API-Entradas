@@ -21,13 +21,13 @@
 
 ## 🚀 Nuevos Endpoints Disponibles
 
-### 1. GET /api/eventos/ventas
+### 1. GET /api/admin/events/sales
 - **Función:** Listar eventos con estadísticas de ventas
 - **Autenticación:** ✅ Requerida (Admin)
 - **Paginación:** ✅ Soportada
 - **Respuesta:** Listado de eventos con vendidas, disponibles y % ocupación
 
-### 2. GET /api/eventos/estadisticas
+### 2. GET /api/admin/events/statistics
 - **Función:** Métricas detalladas globales o por evento
 - **Autenticación:** ✅ Requerida (Admin)
 - **Características:**
@@ -122,7 +122,7 @@ await SalesStatsService.broadcastSalesList()
 
 ### 📝 Archivos Modificados:
 1. **`app/controllers/Http/events_controller.ts`**
-   - Nuevos métodos: `ventas()`, `estadisticas()`
+  - Nuevos métodos: `sales()`, `statistics()`
    - Consultas SQL con joins y agregaciones
    - Cálculos de métricas
 
@@ -164,14 +164,14 @@ Content-Type: application/json
 ### 2. Obtener Listado de Ventas
 
 ```bash
-GET http://localhost:3333/api/eventos/ventas?page=1&limit=10
+GET http://localhost:3333/api/admin/events/sales?page=1&limit=10
 Authorization: Bearer {token}
 ```
 
 ### 3. Obtener Estadísticas Globales
 
 ```bash
-GET http://localhost:3333/api/eventos/estadisticas
+GET http://localhost:3333/api/admin/events/statistics
 Authorization: Bearer {token}
 ```
 
@@ -198,13 +198,13 @@ function SalesDashboard() {
 
   // Cargar datos iniciales
   useEffect(() => {
-    fetch('http://localhost:3333/api/eventos/estadisticas', {
+  fetch('http://localhost:3333/api/admin/events/statistics', {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => setStats(data.data.global))
 
-    fetch('http://localhost:3333/api/eventos/ventas', {
+  fetch('http://localhost:3333/api/admin/events/sales', {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -375,7 +375,7 @@ function SalesCharts({ events, stats }) {
 
 | Criterio | Estado | Evidencia |
 |----------|--------|-----------|
-| **Mostrar listado de eventos** con columnas requeridas | ✅ CUMPLIDO | Endpoint `/api/eventos/ventas` retorna todos los datos |
+| **Mostrar listado de eventos** con columnas requeridas | ✅ CUMPLIDO | Endpoint `/api/admin/events/sales` retorna todos los datos |
 | **Incorporar visualización gráfica** del avance de ventas | ✅ CUMPLIDO | Datos preparados, ejemplos de gráficos documentados |
 | **Asegurar acceso restringido** a usuarios con rol administrador | ✅ CUMPLIDO | Middleware `role({ roles: ['ADMIN'] })` aplicado |
 | **Actualización en tiempo real** (extra) | ✅ CUMPLIDO | WebSockets implementado y funcional |
