@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Event from '../../models/event.js'
-import db from '@adonisjs/lucid/services/db'
 
 export default class EventsController {
   public async index({ request, response }: HttpContext) {
@@ -99,75 +98,79 @@ export default class EventsController {
   }
 
   /**
-   * GET /api/eventos/ventas
+   * GET /api/admin/events/sales
    * Endpoint para listar todos los eventos con entradas vendidas y disponibles
    * Acceso: Solo administradores
    */
-  public async ventas({ request, response }: HttpContext) {
+  public async sales({ request, response }: HttpContext) {
     try {
       const { page = 1, limit = 10, sortBy = 'datetime', order = 'asc' } = request.qs()
 
-      // Consulta con cálculo de entradas vendidas
-      const query = db
-        .from('events')
-        .select(
-          'events.id',
-          'events.title',
-          'events.datetime',
-          'events.price',
-          'events.tickets_total',
-          'events.tickets_available',
-          'companies.name as company_name',
-          'venues.name as venue_name',
-          'venues.address as venue_address'
-        )
-        .leftJoin('companies', 'events.company_id', 'companies.id')
-        .leftJoin('venues', 'events.venue_id', 'venues.id')
-        .orderBy(`events.${sortBy}`, order)
+      const pageNumber = Number(page) > 0 ? Number(page) : 1
+      const limitNumber = Number(limit) > 0 ? Number(limit) : 10
+      const orderDirection = String(order).toLowerCase() === 'desc' ? 'desc' : 'asc'
 
-      // Paginación
-      const offset = (page - 1) * limit
-      const events = await query.limit(limit).offset(offset)
+      const sortableColumns: Record<string, string> = {
+        datetime: 'datetime',
+        price: 'price',
+        ticketsTotal: 'tickets_total',
+        ticketsAvailable: 'tickets_available',
+        title: 'title',
+      }
 
-      // Obtener total de registros para paginación
-      const totalQuery = await db.from('events').count('* as total').first()
-      const total = totalQuery?.total || 0
+      const sortColumn = sortableColumns[String(sortBy)] ?? 'datetime'
 
-      // Calcular entradas vendidas y porcentaje de ocupación
+      const paginator = await Event.query()
+        .preload('company', (companyQuery) => companyQuery.select('id', 'name'))
+        .preload('venue', (venueQuery) => venueQuery.select('id', 'name', 'address'))
+        .orderBy(sortColumn, orderDirection)
+        .paginate(pageNumber, limitNumber)
+
+      const events = paginator.all()
+
       const eventsWithStats = events.map((event) => {
-        const ticketsSold = event.tickets_total - event.tickets_available
+        const ticketsSold = event.ticketsTotal - event.ticketsAvailable
         const occupancyPercentage =
-          event.tickets_total > 0 ? ((ticketsSold / event.tickets_total) * 100).toFixed(2) : '0.00'
+          event.ticketsTotal > 0
+            ? Number.parseFloat(((ticketsSold / event.ticketsTotal) * 100).toFixed(2))
+            : 0
+
+        const datetime =
+          typeof event.datetime?.toISO === 'function'
+            ? event.datetime.toISO()
+            : event.datetime?.toString() ?? null
 
         return {
           id: event.id,
           title: event.title,
-          datetime: event.datetime,
+          datetime,
           price: event.price,
-          ticketsTotal: event.tickets_total,
-          ticketsAvailable: event.tickets_available,
+          ticketsTotal: event.ticketsTotal,
+          ticketsAvailable: event.ticketsAvailable,
           ticketsSold,
-          occupancyPercentage: Number.parseFloat(occupancyPercentage),
-          company: event.company_name,
+          occupancyPercentage,
+          company: event.company?.name ?? null,
           venue: {
-            name: event.venue_name,
-            address: event.venue_address,
+            name: event.venue?.name ?? null,
+            address: event.venue?.address ?? null,
           },
         }
       })
+
+      const meta = paginator.getMeta()
 
       return response.json({
         message: 'Estadísticas de ventas de eventos',
         data: eventsWithStats,
         meta: {
-          total: Number(total),
-          perPage: Number(limit),
-          currentPage: Number(page),
-          lastPage: Math.ceil(Number(total) / Number(limit)),
+          total: Number(meta.total ?? 0),
+          perPage: Number(meta.perPage ?? limitNumber),
+          currentPage: Number(meta.currentPage ?? pageNumber),
+          lastPage: Number(meta.lastPage ?? Math.ceil((meta.total ?? 0) / limitNumber)),
         },
       })
     } catch (error) {
-      console.error('Error en ventas:', error)
+      console.error('Error in sales:', error)
       return response.status(500).json({
         message: 'Error interno del servidor',
         error: error.message,
@@ -176,11 +179,11 @@ export default class EventsController {
   }
 
   /**
-   * GET /api/eventos/estadisticas
+   * GET /api/admin/events/statistics
    * Endpoint para obtener métricas adicionales (% ocupación, ingresos totales)
    * Acceso: Solo administradores
    */
-  public async estadisticas({ request, response }: HttpContext) {
+  public async statistics({ request, response }: HttpContext) {
     try {
       const { eventId } = request.qs()
 
@@ -196,9 +199,15 @@ export default class EventsController {
 
         const ticketsSold = event.ticketsTotal - event.ticketsAvailable
         const occupancyPercentage =
-          event.ticketsTotal > 0 ? ((ticketsSold / event.ticketsTotal) * 100).toFixed(2) : '0.00'
-        const totalRevenue = ticketsSold * event.price
-        const potentialRevenue = event.ticketsTotal * event.price
+          event.ticketsTotal > 0
+            ? Number.parseFloat(((ticketsSold / event.ticketsTotal) * 100).toFixed(2))
+            : 0
+        const totalRevenue = Number.parseFloat((ticketsSold * event.price).toFixed(2))
+        const potentialRevenue = Number.parseFloat((event.ticketsTotal * event.price).toFixed(2))
+        const revenuePercentage =
+          potentialRevenue > 0
+            ? Number.parseFloat(((totalRevenue / potentialRevenue) * 100).toFixed(2))
+            : 0
 
         return response.json({
           message: 'Estadísticas del evento',
@@ -210,81 +219,94 @@ export default class EventsController {
             ticketsTotal: event.ticketsTotal,
             ticketsAvailable: event.ticketsAvailable,
             ticketsSold,
-            occupancyPercentage: Number.parseFloat(occupancyPercentage),
+            occupancyPercentage,
             price: event.price,
-            totalRevenue: Number.parseFloat(totalRevenue.toFixed(2)),
-            potentialRevenue: Number.parseFloat(potentialRevenue.toFixed(2)),
-            revenuePercentage:
-              potentialRevenue > 0
-                ? Number.parseFloat(((totalRevenue / potentialRevenue) * 100).toFixed(2))
-                : 0,
+            totalRevenue,
+            potentialRevenue,
+            revenuePercentage,
           },
         })
       }
 
-      // Estadísticas globales
-      const globalStats = await db
-        .from('events')
-        .select(
-          db.raw('COUNT(*) as total_events'),
-          db.raw('SUM(tickets_total) as total_capacity'),
-          db.raw('SUM(tickets_available) as total_available'),
-          db.raw('SUM(tickets_total - tickets_available) as total_sold'),
-          db.raw('SUM((tickets_total - tickets_available) * price) as total_revenue'),
-          db.raw('SUM(tickets_total * price) as potential_revenue')
-        )
-        .first()
+      const events = await Event.query()
+        .preload('venue', (venueQuery) => venueQuery.select('id', 'name', 'address'))
+        .orderBy('datetime', 'asc')
 
-      const totalEvents = Number(globalStats?.total_events || 0)
-      const totalCapacity = Number(globalStats?.total_capacity || 0)
-      const totalAvailable = Number(globalStats?.total_available || 0)
-      const totalSold = Number(globalStats?.total_sold || 0)
-      const totalRevenue = Number(globalStats?.total_revenue || 0)
-      const potentialRevenue = Number(globalStats?.potential_revenue || 0)
+      const eventsStats = events.map((event) => {
+        const ticketsSold = event.ticketsTotal - event.ticketsAvailable
+        const occupancyPercentage =
+          event.ticketsTotal > 0
+            ? Number.parseFloat(((ticketsSold / event.ticketsTotal) * 100).toFixed(2))
+            : 0
+        const totalRevenue = Number.parseFloat((ticketsSold * event.price).toFixed(2))
+        const potentialRevenue = Number.parseFloat((event.ticketsTotal * event.price).toFixed(2))
+        const eventDatetime =
+          typeof event.datetime?.toISO === 'function'
+            ? event.datetime.toISO()
+            : event.datetime?.toString() ?? null
+
+        return {
+          id: event.id,
+          title: event.title,
+          datetime: eventDatetime,
+          ticketsTotal: event.ticketsTotal,
+          ticketsAvailable: event.ticketsAvailable,
+          ticketsSold,
+          occupancyPercentage,
+          price: event.price,
+          totalRevenue,
+          potentialRevenue,
+        }
+      })
+
+      const totalEvents = eventsStats.length
+      const totalCapacity = eventsStats.reduce((acc, event) => acc + event.ticketsTotal, 0)
+      const totalAvailable = eventsStats.reduce((acc, event) => acc + event.ticketsAvailable, 0)
+      const totalSold = eventsStats.reduce((acc, event) => acc + event.ticketsSold, 0)
+      const totalRevenue = Number.parseFloat(
+        eventsStats.reduce((acc, event) => acc + event.totalRevenue, 0).toFixed(2)
+      )
+      const potentialRevenue = Number.parseFloat(
+        eventsStats.reduce((acc, event) => acc + event.potentialRevenue, 0).toFixed(2)
+      )
 
       const globalOccupancyPercentage =
-        totalCapacity > 0 ? ((totalSold / totalCapacity) * 100).toFixed(2) : '0.00'
+        totalCapacity > 0
+          ? Number.parseFloat(((totalSold / totalCapacity) * 100).toFixed(2))
+          : 0
 
       const revenuePercentage =
-        potentialRevenue > 0 ? ((totalRevenue / potentialRevenue) * 100).toFixed(2) : '0.00'
+        potentialRevenue > 0
+          ? Number.parseFloat(((totalRevenue / potentialRevenue) * 100).toFixed(2))
+          : 0
 
-      // Top 5 eventos más vendidos
-      const topEvents = await db
-        .from('events')
-        .select(
-          'events.id',
-          'events.title',
-          'events.tickets_total',
-          'events.tickets_available',
-          'events.price',
-          db.raw('(events.tickets_total - events.tickets_available) as tickets_sold'),
-          db.raw(
-            'ROUND(((events.tickets_total - events.tickets_available) * 100.0 / events.tickets_total), 2) as occupancy_percentage'
-          )
-        )
-        .orderBy('tickets_sold', 'desc')
-        .limit(5)
+      const topEvents = [...eventsStats]
+        .sort((a, b) => b.ticketsSold - a.ticketsSold)
+        .slice(0, 5)
+        .map((event) => ({
+          id: event.id,
+          title: event.title,
+          ticketsTotal: event.ticketsTotal,
+          ticketsAvailable: event.ticketsAvailable,
+          ticketsSold: event.ticketsSold,
+          occupancyPercentage: event.occupancyPercentage,
+          price: event.price,
+          revenue: Number.parseFloat((event.ticketsSold * event.price).toFixed(2)),
+        }))
 
-      // Eventos con baja ocupación (< 30%)
-      const lowOccupancyEvents = await db
-        .from('events')
-        .select(
-          'events.id',
-          'events.title',
-          'events.datetime',
-          'events.tickets_total',
-          'events.tickets_available',
-          db.raw('(events.tickets_total - events.tickets_available) as tickets_sold'),
-          db.raw(
-            'ROUND(((events.tickets_total - events.tickets_available) * 100.0 / events.tickets_total), 2) as occupancy_percentage'
-          )
-        )
-        .whereRaw(
-          '((events.tickets_total - events.tickets_available) * 100.0 / events.tickets_total) < 30'
-        )
-        .andWhere('events.tickets_total', '>', 0)
-        .orderBy('occupancy_percentage', 'asc')
-        .limit(5)
+      const lowOccupancyEvents = eventsStats
+        .filter((event) => event.ticketsTotal > 0 && event.occupancyPercentage < 30)
+        .sort((a, b) => a.occupancyPercentage - b.occupancyPercentage)
+        .slice(0, 5)
+        .map((event) => ({
+          id: event.id,
+          title: event.title,
+          datetime: event.datetime,
+          ticketsTotal: event.ticketsTotal,
+          ticketsAvailable: event.ticketsAvailable,
+          ticketsSold: event.ticketsSold,
+          occupancyPercentage: event.occupancyPercentage,
+        }))
 
       return response.json({
         message: 'Estadísticas globales del sistema',
@@ -294,34 +316,17 @@ export default class EventsController {
             totalCapacity,
             totalAvailable,
             totalSold,
-            globalOccupancyPercentage: Number.parseFloat(globalOccupancyPercentage),
-            totalRevenue: Number.parseFloat(totalRevenue.toFixed(2)),
-            potentialRevenue: Number.parseFloat(potentialRevenue.toFixed(2)),
-            revenuePercentage: Number.parseFloat(revenuePercentage),
+            globalOccupancyPercentage,
+            totalRevenue,
+            potentialRevenue,
+            revenuePercentage,
           },
-          topEvents: topEvents.map((event) => ({
-            id: event.id,
-            title: event.title,
-            ticketsTotal: event.tickets_total,
-            ticketsAvailable: event.tickets_available,
-            ticketsSold: Number(event.tickets_sold),
-            occupancyPercentage: Number.parseFloat(event.occupancy_percentage),
-            price: event.price,
-            revenue: Number.parseFloat((Number(event.tickets_sold) * event.price).toFixed(2)),
-          })),
-          lowOccupancyEvents: lowOccupancyEvents.map((event) => ({
-            id: event.id,
-            title: event.title,
-            datetime: event.datetime,
-            ticketsTotal: event.tickets_total,
-            ticketsAvailable: event.tickets_available,
-            ticketsSold: Number(event.tickets_sold),
-            occupancyPercentage: Number.parseFloat(event.occupancy_percentage),
-          })),
+          topEvents,
+          lowOccupancyEvents,
         },
       })
     } catch (error) {
-      console.error('Error en estadisticas:', error)
+      console.error('Error in statistics:', error)
       return response.status(500).json({
         message: 'Error interno del servidor',
         error: error.message,

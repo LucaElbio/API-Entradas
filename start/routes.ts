@@ -16,13 +16,13 @@ router
       })
       .prefix('/events')
 
-    // Rutas de administrador - Panel de ventas y estadísticas
+    // Admin event analytics routes
     router
       .group(() => {
-        router.get('/ventas', '#controllers/Http/events_controller.ventas')
-        router.get('/estadisticas', '#controllers/Http/events_controller.estadisticas')
+        router.get('/sales', '#controllers/Http/events_controller.sales')
+        router.get('/statistics', '#controllers/Http/events_controller.statistics')
       })
-      .prefix('/eventos')
+      .prefix('/admin/events')
       .use(middleware.auth())
       .use(middleware.role({ roles: ['ADMIN'] }))
 

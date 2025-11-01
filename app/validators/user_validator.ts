@@ -1,4 +1,5 @@
 import vine from '@vinejs/vine'
+import User from '#models/user'
 
 /**
  * Validator para el registro de usuarios
@@ -35,8 +36,8 @@ export const registerUserValidator = vine.compile(
       .string()
       .email()
       .normalizeEmail()
-      .unique(async (db, value) => {
-        const user = await db.from('users').where('email', value).first()
+      .unique(async (_db, value) => {
+        const user = await User.findBy('email', value)
         return !user
       }),
 
@@ -47,8 +48,8 @@ export const registerUserValidator = vine.compile(
       .minLength(7)
       .maxLength(10)
       .regex(/^\d+$/)
-      .unique(async (db, value) => {
-        const user = await db.from('users').where('dni', value).first()
+      .unique(async (_db, value) => {
+        const user = await User.findBy('dni', value)
         return !user
       }),
 
