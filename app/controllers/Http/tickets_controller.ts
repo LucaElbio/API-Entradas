@@ -247,7 +247,6 @@ export default class TicketsController {
       const { qrCode } = await qrService.generateTicketQR(
         ticket.id,
         reservation.eventId,
-        reservation.userId
       )
       ticket.ownerId = user.id
       ticket.qrCode = qrCode
