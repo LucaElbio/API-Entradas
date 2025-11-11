@@ -1,8 +1,8 @@
 # 📚 API Endpoints - Referencia Completa para Frontend
 
 **Proyecto:** API-Entradas  
-**Versión:** 1.0  
-**Última actualización:** 10/10/2025  
+**Versión:** 1.1  
+**Última actualización:** 24/10/2025  
 **Base URL:** `http://localhost:3333` (desarrollo)
 
 ---
@@ -15,8 +15,10 @@
 4. [Reservas](#reservas)
 5. [Pagos y Tickets](#pagos-y-tickets)
 6. [Verificación de QR](#verificación-de-qr)
-7. [Códigos de Estado HTTP](#códigos-de-estado-http)
-8. [Formatos de Datos](#formatos-de-datos)
+7. [Panel de Ventas y Estadísticas (Admin)](#panel-de-ventas-y-estadísticas-admin)
+8. [WebSocket - Actualizaciones en Tiempo Real](#websocket---actualizaciones-en-tiempo-real)
+9. [Códigos de Estado HTTP](#códigos-de-estado-http)
+10. [Formatos de Datos](#formatos-de-datos)
 
 ---
 
@@ -1283,7 +1285,325 @@ export default api
 
 ---
 
-## 📞 Soporte
+## � Panel de Ventas y Estadísticas (Admin)
+
+**Nota:** Estos endpoints requieren autenticación y rol de **ADMINISTRADOR**.
+
+### 1. Obtener Listado de Ventas por Evento
+
+**Endpoint:** `/api/admin/events/sales`  
+**Método:** `GET`  
+**Ubicación:** `app/controllers/Http/events_controller.ts` → `EventsController.sales`  
+**Requiere autenticación:** ✅ SÍ  
+**Requiere rol:** `ADMIN`
+
+**Query Parameters (opcionales):**
+- `page` (number): Página actual (default: 1)
+- `limit` (number): Elementos por página (default: 10)
+- `sortBy` (string): Campo para ordenar (default: 'datetime')
+- `order` (string): Orden ascendente/descendente ('asc'/'desc', default: 'asc')
+
+**Request:**
+
+```javascript
+const token = localStorage.getItem('token')
+fetch('http://localhost:3333/api/admin/events/sales?page=1&limit=20&sortBy=datetime&order=asc', {
+  headers: { 
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+})
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "message": "Estadísticas de ventas de eventos",
+  "data": [
+    {
+      "id": 1,
+      "title": "Concierto de Rock",
+      "datetime": "2025-11-15T20:00:00.000Z",
+      "price": 5000,
+      "ticketsTotal": 100,
+      "ticketsAvailable": 45,
+      "ticketsSold": 55,
+      "occupancyPercentage": 55.00,
+      "company": "Empresa XYZ",
+      "venue": {
+        "name": "Teatro Municipal",
+        "address": "Av. Principal 123"
+      }
+    }
+  ],
+  "meta": {
+    "total": 50,
+    "perPage": 20,
+    "currentPage": 1,
+    "lastPage": 3
+  }
+}
+```
+
+**Errores:**
+- `401`: No autenticado
+- `403`: No tiene permisos de administrador
+- `500`: Error interno del servidor
+
+---
+
+### 2. Obtener Estadísticas Globales o por Evento
+
+**Endpoint:** `/api/admin/events/statistics`  
+**Método:** `GET`  
+**Ubicación:** `app/controllers/Http/events_controller.ts` → `EventsController.statistics`  
+**Requiere autenticación:** ✅ SÍ  
+**Requiere rol:** `ADMIN`
+
+**Query Parameters (opcionales):**
+- `eventId` (number): ID del evento específico (opcional)
+
+#### 2.1 Estadísticas de un Evento Específico
+
+**Request:**
+
+```javascript
+const token = localStorage.getItem('token')
+fetch('http://localhost:3333/api/admin/events/statistics?eventId=1', {
+  headers: { 
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+})
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "message": "Estadísticas del evento",
+  "data": {
+    "eventId": 1,
+    "title": "Concierto de Rock",
+    "datetime": "2025-11-15T20:00:00.000Z",
+    "venue": "Teatro Municipal",
+    "ticketsTotal": 100,
+    "ticketsAvailable": 45,
+    "ticketsSold": 55,
+    "occupancyPercentage": 55.00,
+    "price": 5000,
+    "totalRevenue": 275000.00,
+    "potentialRevenue": 500000.00,
+    "revenuePercentage": 55.00
+  }
+}
+```
+
+#### 2.2 Estadísticas Globales del Sistema
+
+**Request:**
+
+```javascript
+const token = localStorage.getItem('token')
+fetch('http://localhost:3333/api/admin/events/statistics', {
+  headers: { 
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+})
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "message": "Estadísticas globales del sistema",
+  "data": {
+    "global": {
+      "totalEvents": 15,
+      "totalCapacity": 2000,
+      "totalAvailable": 850,
+      "totalSold": 1150,
+      "globalOccupancyPercentage": 57.50,
+      "totalRevenue": 5750000.00,
+      "potentialRevenue": 10000000.00,
+      "revenuePercentage": 57.50
+    },
+    "topEvents": [
+      {
+        "id": 5,
+        "title": "Festival de Jazz",
+        "ticketsTotal": 200,
+        "ticketsAvailable": 10,
+        "ticketsSold": 190,
+        "occupancyPercentage": 95.00,
+        "price": 8000,
+        "revenue": 1520000.00
+      }
+    ],
+    "lowOccupancyEvents": [
+      {
+        "id": 12,
+        "title": "Obra de Teatro",
+        "datetime": "2025-12-01T19:00:00.000Z",
+        "ticketsTotal": 80,
+        "ticketsAvailable": 70,
+        "ticketsSold": 10,
+        "occupancyPercentage": 12.50
+      }
+    ]
+  }
+}
+```
+
+**Errores:**
+- `401`: No autenticado
+- `403`: No tiene permisos de administrador
+- `404`: Evento no encontrado (cuando se especifica eventId)
+- `500`: Error interno del servidor
+
+---
+
+## 🔄 WebSocket - Actualizaciones en Tiempo Real
+
+El sistema implementa **WebSockets** usando **Transmit** para enviar actualizaciones en tiempo real de las estadísticas de ventas.
+
+### Configuración del Cliente WebSocket
+
+**Endpoint WebSocket:** `ws://localhost:3333/transmit`
+
+#### Ejemplo de Implementación con JavaScript Puro
+
+```javascript
+// Conectar al servidor WebSocket
+const transmit = new EventSource('http://localhost:3333/transmit')
+
+// Escuchar actualizaciones de estadísticas globales
+transmit.addEventListener('sales/stats', (event) => {
+  const data = JSON.parse(event.data)
+  console.log('📊 Actualización de estadísticas globales:', data)
+  // Actualizar UI con las nuevas estadísticas
+  updateGlobalStatsUI(data)
+})
+
+// Escuchar actualizaciones del listado de ventas
+transmit.addEventListener('sales/list', (event) => {
+  const data = JSON.parse(event.data)
+  console.log('📋 Actualización de listado de ventas:', data)
+  // Actualizar tabla de ventas
+  updateSalesListUI(data)
+})
+
+// Escuchar actualizaciones de un evento específico
+transmit.addEventListener('sales/event/1', (event) => {
+  const data = JSON.parse(event.data)
+  console.log('🎫 Actualización de evento específico:', data)
+  // Actualizar detalles del evento
+  updateEventDetailsUI(data)
+})
+
+// Cerrar conexión al desmontar componente
+function cleanup() {
+  transmit.close()
+}
+```
+
+#### Ejemplo con React
+
+```javascript
+import { useEffect, useState } from 'react'
+
+function SalesDashboard() {
+  const [globalStats, setGlobalStats] = useState(null)
+  const [salesList, setSalesList] = useState([])
+
+  useEffect(() => {
+    const transmit = new EventSource('http://localhost:3333/transmit')
+
+    // Actualización de estadísticas globales
+    transmit.addEventListener('sales/stats', (event) => {
+      const data = JSON.parse(event.data)
+      if (data.type === 'global_stats') {
+        setGlobalStats(data.data)
+      }
+    })
+
+    // Actualización del listado de ventas
+    transmit.addEventListener('sales/list', (event) => {
+      const data = JSON.parse(event.data)
+      if (data.type === 'sales_list') {
+        setSalesList(data.data)
+      }
+    })
+
+    // Cleanup al desmontar
+    return () => {
+      transmit.close()
+    }
+  }, [])
+
+  return (
+    <div>
+      <h1>Panel de Ventas</h1>
+      {globalStats && (
+        <div>
+          <h2>Estadísticas Globales</h2>
+          <p>Total Vendido: {globalStats.totalSold}</p>
+          <p>Ocupación: {globalStats.globalOccupancyPercentage}%</p>
+          <p>Ingresos: ${globalStats.totalRevenue}</p>
+        </div>
+      )}
+      <table>
+        <thead>
+          <tr>
+            <th>Evento</th>
+            <th>Vendidas</th>
+            <th>Disponibles</th>
+            <th>Ocupación</th>
+          </tr>
+        </thead>
+        <tbody>
+          {salesList.map((event) => (
+            <tr key={event.id}>
+              <td>{event.title}</td>
+              <td>{event.ticketsSold}</td>
+              <td>{event.ticketsAvailable}</td>
+              <td>{event.occupancyPercentage}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+```
+
+### Canales Disponibles
+
+| Canal | Descripción | Evento Emitido |
+|-------|-------------|----------------|
+| `sales/stats` | Estadísticas globales del sistema | Cuando se procesa un pago |
+| `sales/list` | Listado de todos los eventos con ventas | Cuando se procesa un pago |
+| `sales/event/{id}` | Estadísticas de un evento específico | Cuando se vende entrada para ese evento |
+
+### Cuándo se Emiten Actualizaciones
+
+Las actualizaciones WebSocket se emiten automáticamente cuando:
+- ✅ Se procesa un pago exitoso (`POST /tickets/pay`)
+- ✅ Se genera una reserva (indirectamente afecta disponibilidad)
+- ✅ Se cancela una reserva (se liberan tickets)
+
+### Ventajas del Enfoque con WebSockets
+
+1. **Sin polling:** No es necesario hacer peticiones repetidas al servidor
+2. **Tiempo real:** Las actualizaciones llegan instantáneamente
+3. **Eficiencia:** Menor carga en el servidor y el cliente
+4. **Escalabilidad:** Soporta múltiples clientes conectados simultáneamente
+
+---
+
+## �📞 Soporte
 
 Para dudas o problemas con la API:
 
@@ -1303,6 +1623,7 @@ Reemplazar `http://localhost:3333` con la URL de producción:
 
 ```javascript
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3333'
+const WS_BASE_URL = process.env.REACT_APP_WS_URL || 'http://localhost:3333'
 ```
 
 ### CORS
@@ -1315,6 +1636,6 @@ Hay límite de peticiones por minuto (configurado en el backend). Si recibes err
 
 ---
 
-**Documentación generada:** 10/10/2025  
+**Documentación generada:** 24/10/2025  
 **Versión:** 1.0  
 **Mantenida por:** Backend Team
