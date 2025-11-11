@@ -90,5 +90,7 @@ router
         router.delete('/:id', '#controllers/Http/reservations_controller.cancel')
       })
       .prefix('/reservations')
+      .use(middleware.auth())
+      .use(middleware.rateLimit())
   })
   .prefix('/api')
