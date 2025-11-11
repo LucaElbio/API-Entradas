@@ -350,14 +350,14 @@ export default class TicketsController {
   async index({ auth, response }: HttpContext) {
     try {
       const user = auth.user!
-
+      console.log('Fetching tickets for user:', user.id)
       const tickets = await Ticket.query()
         .where('owner_id', user.id)
         .preload('event')
         .preload('status')
         .preload('reservation')
         .orderBy('created_at', 'desc')
-
+      console.log(`Found ${tickets.length} tickets for user ${user.id}`)
       return response.ok({
         message: 'Tickets obtenidos exitosamente',
         data: tickets.map((ticket) => ({
