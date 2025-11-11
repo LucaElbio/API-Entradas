@@ -166,7 +166,7 @@ export default class ReservationsController {
    * Get all reservations for the authenticated user
    */
   async index({ response, auth }: HttpContext) {
-    const user = auth.getUserOrFail()
+    const user = auth.user!
 
     try {
       const reservations = await Reservation.query()
@@ -215,7 +215,7 @@ export default class ReservationsController {
    * Get a specific reservation by ID
    */
   async show({ params, response, auth }: HttpContext) {
-    const user = auth.getUserOrFail()
+    const user = auth.user!
     const { id } = params
 
     try {
@@ -273,7 +273,7 @@ export default class ReservationsController {
    * Cancel a reservation and return tickets to stock
    */
   async cancel({ params, response, auth }: HttpContext) {
-    const user = auth.getUserOrFail()
+    const user = auth.user!
     const { id } = params
 
     const trx = await db.transaction()
