@@ -117,14 +117,16 @@ export default class HttpExceptionHandler extends ExceptionHandler {
         method: request.method(),
         ip: request.ip(),
         error: error.message,
-        stack: this.debug ? error.stack : undefined,
+        // stack: this.debug ? error.stack : undefined,
+        stack: error.stack,
         timestamp: new Date().toISOString(),
       })
 
       return response.status(500).json({
         message: 'Error interno del servidor',
         error: 'INTERNAL_SERVER_ERROR',
-        ...(this.debug && { details: error.message }),
+        // ...(this.debug && { details: error.message }),
+        details: error.message,
       })
     }
 
