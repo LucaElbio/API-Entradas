@@ -61,6 +61,7 @@ router
       .group(() => {
         // Rutas específicas PRIMERO
         router.get('/mine', '#controllers/Http/tickets_controller.mine')
+        router.get('/transfers/pending', '#controllers/Http/tickets_controller.pendingTransfers')
         router.post('/verify', '#controllers/Http/tickets_controller.verify')
         router.post('/pay', '#controllers/Http/payments_controller.pay')
 
