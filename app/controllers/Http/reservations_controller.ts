@@ -24,7 +24,7 @@ export default class ReservationsController {
    * The reservation will automatically expire if not paid within the time limit
    */
   async create({ request, response, auth }: HttpContext) {
-    const user = auth.getUserOrFail()
+    const user = auth.user!
     const { event_id: eventId, quantity } = request.only(['event_id', 'quantity'])
     console.log('Creating reservation for user:', user.id, 'event:', eventId, 'quantity:', quantity)
     // Validate input
