@@ -1,6 +1,6 @@
 /**
  * Tests para PaymentsController
- * 
+ *
  * Cobertura:
  * - Completar pago exitoso → verificar generación de entradas
  * - Pago rechazado (reserva expirada) → mantener entradas en estado reservado
@@ -128,7 +128,7 @@ const PaymentsController = require('#controllers/Http/payments_controller').defa
  */
 function createHttpContext({ request = {}, auth = {} as any } = {}) {
   const state: any = { status: 0, body: null }
-  
+
   const response = {
     json: (data: any) => {
       state.status = state.status || 200
@@ -182,7 +182,7 @@ function createHttpContext({ request = {}, auth = {} as any } = {}) {
  */
 function createMockReservation(overrides: any = {}) {
   const now = DateTime.now()
-  
+
   return {
     id: 1,
     userId: 5,
@@ -257,7 +257,7 @@ describe('PaymentsController - Completar pago exitoso', () => {
     // Arrange - Preparar datos
     const controller = new PaymentsController()
     const reservation = createMockReservation()
-    
+
     // Mock de estados
     const pendingStatus = { id: 1, code: 'PENDING', name: 'Pendiente' }
     const paidStatus = { id: 2, code: 'PAID', name: 'Pagado' }
@@ -270,7 +270,7 @@ describe('PaymentsController - Completar pago exitoso', () => {
 
     // Configurar mocks
     mockReservationQuery.firstOrFail.mockResolvedValueOnce(reservation)
-    
+
     mockReservationStatusQuery.firstOrFail
       .mockResolvedValueOnce(pendingStatus) // Para validación PENDING
       .mockResolvedValueOnce(paidStatus) // Para cambiar a PAID
@@ -290,9 +290,7 @@ describe('PaymentsController - Completar pago exitoso', () => {
     mockPaymentModel.create.mockResolvedValueOnce(mockPayment)
 
     // Mock de creación de tickets
-    mockTicketModel.create
-      .mockResolvedValueOnce(ticket1)
-      .mockResolvedValueOnce(ticket2)
+    mockTicketModel.create.mockResolvedValueOnce(ticket1).mockResolvedValueOnce(ticket2)
 
     // Mock de generación de QR (cada ticket tiene QR único)
     mockQrService.generateTicketQR
@@ -315,7 +313,7 @@ describe('PaymentsController - Completar pago exitoso', () => {
     // Assert - Verificar
     expect(result.statusCode).toBe(200)
     expect(result.body.message).toBe('Pago procesado exitosamente')
-    
+
     // Verificar que la reserva cambió a PAID
     expect(reservation.statusId).toBe(paidStatus.id)
     expect(reservation.save).toHaveBeenCalled()
@@ -605,10 +603,8 @@ describe('PaymentsController - Tests de integración', () => {
     })
 
     // Crear 5 tickets diferentes
-    const tickets = Array.from({ length: 5 }, (_, i) =>
-      createMockTicket(100 + i, 1, 10, 5)
-    )
-    
+    const tickets = Array.from({ length: 5 }, (_, i) => createMockTicket(100 + i, 1, 10, 5))
+
     tickets.forEach((ticket, index) => {
       mockTicketModel.create.mockResolvedValueOnce(ticket)
       mockQrService.generateTicketQR.mockResolvedValueOnce({
@@ -671,9 +667,7 @@ describe('PaymentsController - Tests de integración', () => {
     })
 
     // Simular error en el envío de email
-    mockMailService.sendPurchaseConfirmation.mockRejectedValueOnce(
-      new Error('SMTP error')
-    )
+    mockMailService.sendPurchaseConfirmation.mockRejectedValueOnce(new Error('SMTP error'))
 
     const ctx = createHttpContext({
       request: { reservation_id: 1 },

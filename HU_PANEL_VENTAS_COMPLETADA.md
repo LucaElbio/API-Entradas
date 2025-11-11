@@ -9,6 +9,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 ## 🎯 Estado: ✅ COMPLETADO Y FUNCIONAL
 
 ### Verificación:
+
 - ✅ Código compilado sin errores
 - ✅ Servidor iniciado correctamente
 - ✅ Todos los endpoints funcionando
@@ -21,6 +22,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 ## 📊 Endpoints Implementados
 
 ### 1. GET /api/admin/events/sales
+
 - **Descripción:** Listado de eventos con estadísticas de ventas
 - **Autenticación:** Bearer Token (Admin)
 - **Características:**
@@ -28,8 +30,9 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
   - Ordenamiento (`sortBy`, `order`)
   - Columnas: Nombre, Vendidas, Disponibles, % Ocupación
   - Datos de venue y compañía
-  
+
 ### 2. GET /api/admin/events/statistics
+
 - **Descripción:** Métricas detalladas del sistema
 - **Autenticación:** Bearer Token (Admin)
 - **Características:**
@@ -40,6 +43,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
   - Cálculo de ingresos totales y potenciales
 
 ### 3. WebSocket: /\_\_transmit/events
+
 - **Descripción:** Actualizaciones en tiempo real
 - **Canales:**
   - `sales/stats` - Estadísticas globales
@@ -50,37 +54,39 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 
 ## 📁 Archivos Creados
 
-| Archivo | Descripción |
-|---------|-------------|
+| Archivo                               | Descripción                             |
+| ------------------------------------- | --------------------------------------- |
 | `app/services/sales_stats_service.ts` | Servicio de estadísticas en tiempo real |
-| `docs/PANEL_VENTAS_ESTADISTICAS.md` | Documentación técnica completa (49KB) |
-| `RESUMEN_HU_PANEL_VENTAS.md` | Resumen de implementación |
-| `GUIA_PRUEBAS_PANEL_VENTAS.md` | Guía paso a paso para pruebas |
+| `docs/PANEL_VENTAS_ESTADISTICAS.md`   | Documentación técnica completa (49KB)   |
+| `RESUMEN_HU_PANEL_VENTAS.md`          | Resumen de implementación               |
+| `GUIA_PRUEBAS_PANEL_VENTAS.md`        | Guía paso a paso para pruebas           |
 
 ---
 
 ## 📝 Archivos Modificados
 
-| Archivo | Cambios |
-|---------|---------|
-| `app/controllers/Http/events_controller.ts` | +169 líneas: métodos `sales()` y `statistics()` |
-| `app/controllers/Http/payments_controller.ts` | +6 líneas: integración con WebSockets |
-| `start/routes.ts` | +10 líneas: rutas protegidas + WebSocket |
-| `API_ENDPOINTS_REFERENCE.md` | +320 líneas: documentación de API |
-| `package.json` | +1 dependencia: `@adonisjs/transmit` |
-| `config/transmit.ts` | Archivo generado automáticamente |
+| Archivo                                       | Cambios                                         |
+| --------------------------------------------- | ----------------------------------------------- |
+| `app/controllers/Http/events_controller.ts`   | +169 líneas: métodos `sales()` y `statistics()` |
+| `app/controllers/Http/payments_controller.ts` | +6 líneas: integración con WebSockets           |
+| `start/routes.ts`                             | +10 líneas: rutas protegidas + WebSocket        |
+| `API_ENDPOINTS_REFERENCE.md`                  | +320 líneas: documentación de API               |
+| `package.json`                                | +1 dependencia: `@adonisjs/transmit`            |
+| `config/transmit.ts`                          | Archivo generado automáticamente                |
 
 ---
 
 ## 🔐 Seguridad
 
 ### Middlewares Aplicados:
+
 ```typescript
 .use(middleware.auth())                       // JWT requerido
 .use(middleware.role({ roles: ['ADMIN'] }))   // Solo admins
 ```
 
 ### Validaciones:
+
 - ✅ Token JWT válido
 - ✅ Usuario autenticado
 - ✅ Rol de administrador
@@ -91,6 +97,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 ## 📊 Métricas Calculadas
 
 ### Por Evento:
+
 - Entradas vendidas (`ticketsTotal - ticketsAvailable`)
 - % de ocupación (`(vendidas / total) * 100`)
 - Ingresos totales (`vendidas * precio`)
@@ -98,6 +105,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 - % de ingresos (`(total / potencial) * 100`)
 
 ### Globales:
+
 - Total de eventos
 - Capacidad total del sistema
 - Entradas vendidas totales
@@ -114,6 +122,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 ### Tecnología: Transmit (WebSockets de AdonisJS)
 
 ### Flujo:
+
 1. Usuario procesa pago → `POST /tickets/pay`
 2. Backend confirma pago exitosamente
 3. `SalesStatsService.broadcastEventStats(eventId)` se ejecuta
@@ -122,6 +131,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 6. UI se actualiza sin necesidad de refresh
 
 ### Ventajas:
+
 - ✅ Sin polling innecesario
 - ✅ Actualizaciones instantáneas
 - ✅ Menor carga en servidor
@@ -138,7 +148,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 // 1. Obtener datos iniciales
 const token = localStorage.getItem('token')
 const response = await fetch('http://localhost:3333/api/admin/events/sales', {
-  headers: { Authorization: `Bearer ${token}` }
+  headers: { Authorization: `Bearer ${token}` },
 })
 const data = await response.json()
 console.log(data.data) // Array de eventos
@@ -160,11 +170,11 @@ function SalesDashboard() {
 
   useEffect(() => {
     // Cargar datos iniciales
-  fetch('http://localhost:3333/api/admin/events/sales', {
-      headers: { Authorization: `Bearer ${token}` }
+    fetch('http://localhost:3333/api/admin/events/sales', {
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => res.json())
-      .then(data => setEvents(data.data))
+      .then((res) => res.json())
+      .then((data) => setEvents(data.data))
 
     // Conectar WebSocket
     const transmit = new EventSource('http://localhost:3333/__transmit/events')
@@ -187,7 +197,7 @@ function SalesDashboard() {
         </tr>
       </thead>
       <tbody>
-        {events.map(event => (
+        {events.map((event) => (
           <tr key={event.id}>
             <td>{event.title}</td>
             <td>{event.ticketsSold}</td>
@@ -206,11 +216,13 @@ function SalesDashboard() {
 ## 📊 Visualización Gráfica (Frontend)
 
 ### Librerías Recomendadas:
+
 - **Chart.js** - Gráficos de barras, líneas, donut
 - **Recharts** - Componentes React nativos
 - **ApexCharts** - Gráficos interactivos avanzados
 
 ### Tipos de Gráficos Sugeridos:
+
 1. **Barra horizontal:** % ocupación por evento
 2. **Donut:** Distribución de ingresos (actuales vs potenciales)
 3. **Línea:** Evolución de ventas en el tiempo
@@ -220,12 +232,12 @@ function SalesDashboard() {
 
 ## ✅ Criterios de Aceptación - Verificación
 
-| # | Criterio | Estado | Evidencia |
-|---|----------|--------|-----------|
-| 1 | Mostrar listado de eventos con columnas requeridas | ✅ | Endpoint `/api/admin/events/sales` |
-| 2 | Incorporar visualización gráfica | ✅ | Datos listos para gráficos |
-| 3 | Acceso restringido a administradores | ✅ | Middleware de roles |
-| 4 | Actualización en tiempo real (bonus) | ✅ | WebSockets implementado |
+| #   | Criterio                                           | Estado | Evidencia                          |
+| --- | -------------------------------------------------- | ------ | ---------------------------------- |
+| 1   | Mostrar listado de eventos con columnas requeridas | ✅     | Endpoint `/api/admin/events/sales` |
+| 2   | Incorporar visualización gráfica                   | ✅     | Datos listos para gráficos         |
+| 3   | Acceso restringido a administradores               | ✅     | Middleware de roles                |
+| 4   | Actualización en tiempo real (bonus)               | ✅     | WebSockets implementado            |
 
 ---
 
@@ -264,12 +276,12 @@ transmit.addEventListener('sales/stats', (e) => console.log(JSON.parse(e.data)))
 
 ## 📚 Documentación Disponible
 
-| Documento | Contenido |
-|-----------|-----------|
-| `docs/PANEL_VENTAS_ESTADISTICAS.md` | Documentación técnica completa |
-| `API_ENDPOINTS_REFERENCE.md` | Referencia de todos los endpoints |
-| `RESUMEN_HU_PANEL_VENTAS.md` | Resumen detallado de implementación |
-| `GUIA_PRUEBAS_PANEL_VENTAS.md` | Guía paso a paso para probar |
+| Documento                           | Contenido                           |
+| ----------------------------------- | ----------------------------------- |
+| `docs/PANEL_VENTAS_ESTADISTICAS.md` | Documentación técnica completa      |
+| `API_ENDPOINTS_REFERENCE.md`        | Referencia de todos los endpoints   |
+| `RESUMEN_HU_PANEL_VENTAS.md`        | Resumen detallado de implementación |
+| `GUIA_PRUEBAS_PANEL_VENTAS.md`      | Guía paso a paso para probar        |
 
 ---
 
@@ -352,7 +364,7 @@ La implementación está **100% completa y funcional**:
 ✅ **Tiempo Real:** WebSockets configurados y funcionando  
 ✅ **Documentación:** Completa y detallada  
 ✅ **Testing:** Guías de prueba disponibles  
-✅ **Producción Ready:** Código compilado sin errores  
+✅ **Producción Ready:** Código compilado sin errores
 
 El frontend puede comenzar a integrar estos endpoints inmediatamente siguiendo la documentación proporcionada.
 
@@ -371,6 +383,7 @@ El frontend puede comenzar a integrar estos endpoints inmediatamente siguiendo l
 ## 📞 Contacto
 
 Para dudas o soporte:
+
 - Revisar documentación en `docs/`
 - Consultar `API_ENDPOINTS_REFERENCE.md`
 - Verificar logs del servidor

@@ -244,10 +244,7 @@ export default class TicketsController {
       const reservation = await Reservation.query({ client: trx })
         .where('id', ticket.reservationId)
         .firstOrFail()
-      const { qrCode } = await qrService.generateTicketQR(
-        ticket.id,
-        reservation.eventId,
-      )
+      const { qrCode } = await qrService.generateTicketQR(ticket.id, reservation.eventId)
       ticket.ownerId = user.id
       ticket.qrCode = qrCode
       await ticket.save()

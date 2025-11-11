@@ -56,11 +56,7 @@ export default class SalesStatsService {
   private static async getGlobalStats() {
     // Obtener todos los eventos y calcular agregados en memoria
     // Para datasets grandes, considerar agregar índices o cache
-    const events = await Event.query().select(
-      'tickets_total',
-      'tickets_available',
-      'price'
-    )
+    const events = await Event.query().select('tickets_total', 'tickets_available', 'price')
 
     let totalCapacity = 0
     let totalAvailable = 0

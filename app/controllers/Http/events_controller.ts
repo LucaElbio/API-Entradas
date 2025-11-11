@@ -138,7 +138,7 @@ export default class EventsController {
         const datetime =
           typeof event.datetime?.toISO === 'function'
             ? event.datetime.toISO()
-            : event.datetime?.toString() ?? null
+            : (event.datetime?.toString() ?? null)
 
         return {
           id: event.id,
@@ -243,7 +243,7 @@ export default class EventsController {
         const eventDatetime =
           typeof event.datetime?.toISO === 'function'
             ? event.datetime.toISO()
-            : event.datetime?.toString() ?? null
+            : (event.datetime?.toString() ?? null)
 
         return {
           id: event.id,
@@ -271,9 +271,7 @@ export default class EventsController {
       )
 
       const globalOccupancyPercentage =
-        totalCapacity > 0
-          ? Number.parseFloat(((totalSold / totalCapacity) * 100).toFixed(2))
-          : 0
+        totalCapacity > 0 ? Number.parseFloat(((totalSold / totalCapacity) * 100).toFixed(2)) : 0
 
       const revenuePercentage =
         potentialRevenue > 0

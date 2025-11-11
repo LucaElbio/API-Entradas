@@ -146,7 +146,7 @@ export default class PaymentsController {
         // Generate QR code with the ticket ID
         const { qrCode, qrImageUrl } = await qrService.generateTicketQR(
           ticket.id,
-          reservation.eventId,
+          reservation.eventId
         )
 
         // Update ticket with QR code

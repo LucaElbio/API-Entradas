@@ -1,6 +1,6 @@
 /**
  * Tests para MailService
- * 
+ *
  * Cobertura:
  * - Verificar envío de email de confirmación de compra
  * - Validar que el email incluye los QR códigos correctos
@@ -75,12 +75,14 @@ function createPurchaseConfirmationData(overrides: any = {}) {
       {
         id: 101,
         qrCode: '101-10-5-uuid-aaaa',
-        qrImageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==',
+        qrImageUrl:
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==',
       },
       {
         id: 102,
         qrCode: '102-10-5-uuid-bbbb',
-        qrImageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==',
+        qrImageUrl:
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==',
       },
     ],
     payment: {
@@ -237,7 +239,7 @@ describe('MailService - Códigos QR en el email', () => {
     await mailService.sendPurchaseConfirmation(data)
 
     const callArgs = mockSendMail.mock.calls[0][0]
-    
+
     // Verificar que muestra los IDs de los tickets
     expect(callArgs.html).toContain('Entrada #101')
     expect(callArgs.html).toContain('Entrada #102')
@@ -263,7 +265,7 @@ describe('MailService - Códigos QR en el email', () => {
     await mailService.sendPurchaseConfirmation(data)
 
     const callArgs = mockSendMail.mock.calls[0][0]
-    
+
     // Solo debe incluir el ticket con QR
     expect(callArgs.attachments).toHaveLength(1)
     expect(callArgs.attachments[0].filename).toBe('ticket-102-qr.png')
@@ -284,7 +286,7 @@ describe('MailService - Códigos QR en el email', () => {
     await mailService.sendPurchaseConfirmation(data)
 
     const callArgs = mockSendMail.mock.calls[0][0]
-    
+
     // Debe incluir 5 QRs
     expect(callArgs.attachments).toHaveLength(5)
     expect(callArgs.html).toContain('Entrada #100')
@@ -361,7 +363,7 @@ describe('MailService - Formato y contenido del email', () => {
   it('Debe formatear la fecha del evento correctamente', async () => {
     const mailService = new MailService()
     const eventDate = DateTime.fromISO('2025-12-25T20:00:00')
-    
+
     const data = createPurchaseConfirmationData({
       event: {
         title: 'Evento de Prueba',
@@ -375,10 +377,10 @@ describe('MailService - Formato y contenido del email', () => {
     await mailService.sendPurchaseConfirmation(data)
 
     const callArgs = mockSendMail.mock.calls[0][0]
-    
+
     // Verificar formato dd/MM/yyyy
     expect(callArgs.html).toMatch(/25\/12\/2025/)
-    
+
     // Verificar formato HH:mm
     expect(callArgs.html).toMatch(/20:00/)
   })
@@ -525,7 +527,7 @@ describe('MailService - Validación de QR válido en confirmación', () => {
     await mailService.sendPurchaseConfirmation(data)
 
     const callArgs = mockSendMail.mock.calls[0][0]
-    
+
     // Solo debe incluir los tickets con QR válido
     expect(callArgs.attachments).toHaveLength(2)
   })
@@ -569,7 +571,7 @@ describe('MailService - Validación de QR válido en confirmación', () => {
     // El email debe enviarse igual (sin adjuntos)
     expect(result).toBe(true)
     expect(mockSendMail).toHaveBeenCalled()
-    
+
     const callArgs = mockSendMail.mock.calls[0][0]
     expect(callArgs.attachments).toHaveLength(0)
   })

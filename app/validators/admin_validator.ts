@@ -100,8 +100,7 @@ export const adminValidationMessages = {
   'password.string': 'La contraseña debe ser una cadena de texto',
   'password.minLength': 'La contraseña debe tener al menos 8 caracteres',
   'password.maxLength': 'La contraseña no puede tener más de 128 caracteres',
-  'password.regex':
-    'La contraseña debe contener al menos una mayúscula, una minúscula y un número',
+  'password.regex': 'La contraseña debe contener al menos una mayúscula, una minúscula y un número',
 
   'dni.string': 'El DNI debe ser una cadena de texto',
   'dni.minLength': 'El DNI debe tener al menos 7 dígitos',
