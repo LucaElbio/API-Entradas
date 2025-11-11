@@ -26,9 +26,6 @@ export default class Reservation extends BaseModel {
   @column()
   declare totalAmount: number
 
-  @column()
-  declare token: string
-
   @column.dateTime()
   declare expiresAt: DateTime
 
