@@ -212,7 +212,7 @@ describe('QrService - QR corresponde al usuario correcto', () => {
 
     // Extraer el userId del código QR (tercera parte)
     const parts = result.qrCode.split('-')
-    const extractedUserId = parseInt(parts[2], 10)
+    const extractedUserId = Number.parseInt(parts[2], 10)
 
     expect(extractedUserId).toBe(userId)
   })
@@ -266,7 +266,7 @@ describe('QrService - QR corresponde al usuario correcto', () => {
     // Simular extracción de userId desde el QR (como haría el backend)
     const extractUserId = (qrCode: string): number => {
       const parts = qrCode.split('-')
-      return parseInt(parts[2], 10)
+      return Number.parseInt(parts[2], 10)
     }
 
     const extractedUserId = extractUserId(result.qrCode)
