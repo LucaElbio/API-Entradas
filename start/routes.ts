@@ -1,5 +1,9 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
+import transmit from '@adonisjs/transmit/services/main'
+
+// WebSocket endpoint for real-time updates
+transmit.registerRoutes()
 
 router
   .group(() => {
@@ -38,6 +42,34 @@ router
       })
       .prefix('/venues')
       .use(middleware.auth())
+
+    // Admin event analytics routes
+    router
+      .group(() => {
+        router.get('/sales', '#controllers/Http/events_controller.sales')
+        router.get('/statistics', '#controllers/Http/events_controller.statistics')
+      })
+      .prefix('/admin/events')
+      .use(middleware.auth())
+      .use(middleware.role({ roles: ['ADMIN'] }))
+
+    // Rutas de administrador
+    router
+      .group(() => {
+        router.post('/register', '#controllers/Http/admins_controller.register')
+        router.post('/login', '#controllers/Http/admins_controller.login')
+
+        // Rutas protegidas (requieren autenticación)
+        router
+          .group(() => {
+            router.get('/me', '#controllers/Http/admins_controller.me')
+            router.post('/logout', '#controllers/Http/admins_controller.logout')
+            router.post('/refresh', '#controllers/Http/admins_controller.refreshToken')
+          })
+          .use(middleware.auth())
+      })
+      .prefix('/admin')
+      .use(middleware.rateLimit())
 
     router
       .group(() => {
@@ -86,5 +118,7 @@ router
         router.delete('/:id', '#controllers/Http/reservations_controller.cancel')
       })
       .prefix('/reservations')
+      .use(middleware.auth())
+      .use(middleware.rateLimit())
   })
   .prefix('/api')

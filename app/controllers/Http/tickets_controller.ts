@@ -300,11 +300,7 @@ export default class TicketsController {
       const reservation = await Reservation.query({ client: trx })
         .where('id', ticket.reservationId)
         .firstOrFail()
-      const { qrCode } = await qrService.generateTicketQR(
-        ticket.id,
-        reservation.eventId,
-        reservation.userId
-      )
+      const { qrCode } = await qrService.generateTicketQR(ticket.id, reservation.eventId)
       ticket.ownerId = user.id
       ticket.qrCode = qrCode
       await ticket.save()
@@ -407,17 +403,17 @@ export default class TicketsController {
    * GET /tickets
    * Get all tickets for the authenticated user
    */
-  async index({ auth, response }: HttpContext) {
+  async index({ auth, response, logger }: HttpContext) {
     try {
       const user = auth.user!
-
+      logger.info('Fetching tickets for user:', user.id)
       const tickets = await Ticket.query()
         .where('owner_id', user.id)
         .preload('event')
         .preload('status')
         .preload('reservation')
         .orderBy('created_at', 'desc')
-
+      logger.info(`Found ${tickets.length} tickets for user ${user.id}`)
       return response.ok({
         message: 'Tickets obtenidos exitosamente',
         data: tickets.map((ticket) => ({
