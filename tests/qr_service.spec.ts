@@ -1,6 +1,6 @@
 /**
  * Tests para QrService
- * 
+ *
  * Cobertura:
  * - Generar código QR único para cada entrada
  * - Verificar que cada entrada tiene un QR distinto
@@ -45,7 +45,7 @@ describe('QrService - Generación de código QR único', () => {
     expect(parts[0]).toBe('101') // ticketId
     expect(parts[1]).toBe('10') // eventId
     expect(parts[2]).toBe('5') // userId
-    
+
     // Verificar que después de los 3 primeros IDs viene el UUID
     const uuidPart = parts.slice(3).join('-')
     expect(uuidPart).toMatch(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i)
@@ -348,9 +348,7 @@ describe('QrService - Los QR no se repiten', () => {
 
     // Generar 100 QRs
     const qrCodes = await Promise.all(
-      Array.from({ length: numberOfQRs }, (_, i) =>
-        qrService.generateTicketQR(i + 1, 1, userId)
-      )
+      Array.from({ length: numberOfQRs }, (_, i) => qrService.generateTicketQR(i + 1, 1, userId))
     )
 
     // Extraer solo los códigos
@@ -441,10 +439,10 @@ describe('QrService - Casos edge', () => {
     // un QR de 300x300 debería tener al menos 5KB-10KB
     // Con el mock solo verificamos que genera alguna imagen
     const base64Data = result.qrImageUrl.replace(/^data:image\/png;base64,/, '')
-    
+
     // Verificar que genera algún contenido
     expect(base64Data.length).toBeGreaterThan(0)
-    
+
     // TODO: Para test de integración real, verificar tamaño > 5000 bytes
   })
 })

@@ -1298,6 +1298,7 @@ export default api
 **Requiere rol:** `ADMIN`
 
 **Query Parameters (opcionales):**
+
 - `page` (number): Página actual (default: 1)
 - `limit` (number): Elementos por página (default: 10)
 - `sortBy` (string): Campo para ordenar (default: 'datetime')
@@ -1308,9 +1309,9 @@ export default api
 ```javascript
 const token = localStorage.getItem('token')
 fetch('http://localhost:3333/api/admin/events/sales?page=1&limit=20&sortBy=datetime&order=asc', {
-  headers: { 
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json'
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
   },
 })
 ```
@@ -1329,7 +1330,7 @@ fetch('http://localhost:3333/api/admin/events/sales?page=1&limit=20&sortBy=datet
       "ticketsTotal": 100,
       "ticketsAvailable": 45,
       "ticketsSold": 55,
-      "occupancyPercentage": 55.00,
+      "occupancyPercentage": 55.0,
       "company": "Empresa XYZ",
       "venue": {
         "name": "Teatro Municipal",
@@ -1347,6 +1348,7 @@ fetch('http://localhost:3333/api/admin/events/sales?page=1&limit=20&sortBy=datet
 ```
 
 **Errores:**
+
 - `401`: No autenticado
 - `403`: No tiene permisos de administrador
 - `500`: Error interno del servidor
@@ -1362,6 +1364,7 @@ fetch('http://localhost:3333/api/admin/events/sales?page=1&limit=20&sortBy=datet
 **Requiere rol:** `ADMIN`
 
 **Query Parameters (opcionales):**
+
 - `eventId` (number): ID del evento específico (opcional)
 
 #### 2.1 Estadísticas de un Evento Específico
@@ -1371,9 +1374,9 @@ fetch('http://localhost:3333/api/admin/events/sales?page=1&limit=20&sortBy=datet
 ```javascript
 const token = localStorage.getItem('token')
 fetch('http://localhost:3333/api/admin/events/statistics?eventId=1', {
-  headers: { 
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json'
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
   },
 })
 ```
@@ -1391,11 +1394,11 @@ fetch('http://localhost:3333/api/admin/events/statistics?eventId=1', {
     "ticketsTotal": 100,
     "ticketsAvailable": 45,
     "ticketsSold": 55,
-    "occupancyPercentage": 55.00,
+    "occupancyPercentage": 55.0,
     "price": 5000,
-    "totalRevenue": 275000.00,
-    "potentialRevenue": 500000.00,
-    "revenuePercentage": 55.00
+    "totalRevenue": 275000.0,
+    "potentialRevenue": 500000.0,
+    "revenuePercentage": 55.0
   }
 }
 ```
@@ -1407,9 +1410,9 @@ fetch('http://localhost:3333/api/admin/events/statistics?eventId=1', {
 ```javascript
 const token = localStorage.getItem('token')
 fetch('http://localhost:3333/api/admin/events/statistics', {
-  headers: { 
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json'
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
   },
 })
 ```
@@ -1425,10 +1428,10 @@ fetch('http://localhost:3333/api/admin/events/statistics', {
       "totalCapacity": 2000,
       "totalAvailable": 850,
       "totalSold": 1150,
-      "globalOccupancyPercentage": 57.50,
-      "totalRevenue": 5750000.00,
-      "potentialRevenue": 10000000.00,
-      "revenuePercentage": 57.50
+      "globalOccupancyPercentage": 57.5,
+      "totalRevenue": 5750000.0,
+      "potentialRevenue": 10000000.0,
+      "revenuePercentage": 57.5
     },
     "topEvents": [
       {
@@ -1437,9 +1440,9 @@ fetch('http://localhost:3333/api/admin/events/statistics', {
         "ticketsTotal": 200,
         "ticketsAvailable": 10,
         "ticketsSold": 190,
-        "occupancyPercentage": 95.00,
+        "occupancyPercentage": 95.0,
         "price": 8000,
-        "revenue": 1520000.00
+        "revenue": 1520000.0
       }
     ],
     "lowOccupancyEvents": [
@@ -1450,7 +1453,7 @@ fetch('http://localhost:3333/api/admin/events/statistics', {
         "ticketsTotal": 80,
         "ticketsAvailable": 70,
         "ticketsSold": 10,
-        "occupancyPercentage": 12.50
+        "occupancyPercentage": 12.5
       }
     ]
   }
@@ -1458,6 +1461,7 @@ fetch('http://localhost:3333/api/admin/events/statistics', {
 ```
 
 **Errores:**
+
 - `401`: No autenticado
 - `403`: No tiene permisos de administrador
 - `404`: Evento no encontrado (cuando se especifica eventId)
@@ -1581,15 +1585,16 @@ function SalesDashboard() {
 
 ### Canales Disponibles
 
-| Canal | Descripción | Evento Emitido |
-|-------|-------------|----------------|
-| `sales/stats` | Estadísticas globales del sistema | Cuando se procesa un pago |
-| `sales/list` | Listado de todos los eventos con ventas | Cuando se procesa un pago |
-| `sales/event/{id}` | Estadísticas de un evento específico | Cuando se vende entrada para ese evento |
+| Canal              | Descripción                             | Evento Emitido                          |
+| ------------------ | --------------------------------------- | --------------------------------------- |
+| `sales/stats`      | Estadísticas globales del sistema       | Cuando se procesa un pago               |
+| `sales/list`       | Listado de todos los eventos con ventas | Cuando se procesa un pago               |
+| `sales/event/{id}` | Estadísticas de un evento específico    | Cuando se vende entrada para ese evento |
 
 ### Cuándo se Emiten Actualizaciones
 
 Las actualizaciones WebSocket se emiten automáticamente cuando:
+
 - ✅ Se procesa un pago exitoso (`POST /tickets/pay`)
 - ✅ Se genera una reserva (indirectamente afecta disponibilidad)
 - ✅ Se cancela una reserva (se liberan tickets)

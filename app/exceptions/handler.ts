@@ -1,6 +1,7 @@
 import app from '@adonisjs/core/services/app'
-import { HttpContext, ExceptionHandler } from '@adonisjs/core/http'
-import { errors as vineErrors } from '@vinejs/vine'
+import { ExceptionHandler } from '@adonisjs/core/http'
+// import { HttpContext, ExceptionHandler } from '@adonisjs/core/http'
+// import { errors as vineErrors } from '@vinejs/vine'
 
 export default class HttpExceptionHandler extends ExceptionHandler {
   /**

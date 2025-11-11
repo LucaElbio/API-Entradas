@@ -10,24 +10,26 @@
 
 ## 🎯 Estado de Implementación
 
-| Tarea | Estado | Detalles |
-|-------|--------|----------|
-| **BE-Modelado y consulta de datos** | ✅ Completado | Consultas SQL optimizadas para estadísticas |
-| **BE-Endpoints de estadísticas y ventas** | ✅ Completado | 2 endpoints implementados con paginación |
-| **BE-Actualización en tiempo real** | ✅ Completado | WebSockets implementado con Transmit |
-| **Seguridad y autenticación** | ✅ Completado | Middleware de rol ADMIN aplicado |
+| Tarea                                     | Estado        | Detalles                                    |
+| ----------------------------------------- | ------------- | ------------------------------------------- |
+| **BE-Modelado y consulta de datos**       | ✅ Completado | Consultas SQL optimizadas para estadísticas |
+| **BE-Endpoints de estadísticas y ventas** | ✅ Completado | 2 endpoints implementados con paginación    |
+| **BE-Actualización en tiempo real**       | ✅ Completado | WebSockets implementado con Transmit        |
+| **Seguridad y autenticación**             | ✅ Completado | Middleware de rol ADMIN aplicado            |
 
 ---
 
 ## 🚀 Nuevos Endpoints Disponibles
 
 ### 1. GET /api/admin/events/sales
+
 - **Función:** Listar eventos con estadísticas de ventas
 - **Autenticación:** ✅ Requerida (Admin)
 - **Paginación:** ✅ Soportada
 - **Respuesta:** Listado de eventos con vendidas, disponibles y % ocupación
 
 ### 2. GET /api/admin/events/statistics
+
 - **Función:** Métricas detalladas globales o por evento
 - **Autenticación:** ✅ Requerida (Admin)
 - **Características:**
@@ -38,6 +40,7 @@
   - Cálculo de ingresos totales y potenciales
 
 ### 3. WebSocket /transmit
+
 - **Función:** Actualizaciones en tiempo real
 - **Canales:**
   - `sales/stats` - Estadísticas globales
@@ -49,6 +52,7 @@
 ## 📊 Datos Proporcionados
 
 ### Por Evento:
+
 - ✅ Nombre del evento
 - ✅ Entradas totales
 - ✅ Entradas disponibles
@@ -62,6 +66,7 @@
 - ✅ Información de la compañía
 
 ### Globales:
+
 - ✅ Total de eventos
 - ✅ Capacidad total
 - ✅ Entradas disponibles totales
@@ -76,12 +81,14 @@
 ## 🔐 Seguridad Implementada
 
 ### Middlewares Aplicados:
+
 ```typescript
 .use(middleware.auth())           // Autenticación requerida
 .use(middleware.role({ roles: ['ADMIN'] }))  // Solo administradores
 ```
 
 ### Verificaciones:
+
 1. ✅ Token JWT válido
 2. ✅ Usuario autenticado
 3. ✅ Usuario tiene rol ADMIN
@@ -94,11 +101,13 @@
 ### Tecnología: AdonisJS Transmit (WebSockets)
 
 ### Eventos que Disparan Actualizaciones:
+
 - ✅ Pago procesado exitosamente
 - ✅ Tickets generados
 - ✅ Reservas canceladas (futura implementación)
 
 ### Implementación:
+
 ```typescript
 // En PaymentsController después de confirmar pago:
 await SalesStatsService.broadcastEventStats(reservation.eventId)
@@ -110,6 +119,7 @@ await SalesStatsService.broadcastSalesList()
 ## 📁 Archivos Creados/Modificados
 
 ### ✨ Nuevos Archivos:
+
 1. **`app/services/sales_stats_service.ts`**
    - Servicio para manejar estadísticas en tiempo real
    - Métodos para broadcast de actualizaciones
@@ -121,10 +131,12 @@ await SalesStatsService.broadcastSalesList()
    - Ejemplos de código
 
 ### 📝 Archivos Modificados:
+
 1. **`app/controllers/Http/events_controller.ts`**
-  - Nuevos métodos: `sales()`, `statistics()`
-   - Consultas SQL con joins y agregaciones
-   - Cálculos de métricas
+
+- Nuevos métodos: `sales()`, `statistics()`
+- Consultas SQL con joins y agregaciones
+- Cálculos de métricas
 
 2. **`app/controllers/Http/payments_controller.ts`**
    - Integración con `SalesStatsService`
@@ -198,17 +210,17 @@ function SalesDashboard() {
 
   // Cargar datos iniciales
   useEffect(() => {
-  fetch('http://localhost:3333/api/admin/events/statistics', {
-      headers: { Authorization: `Bearer ${token}` }
+    fetch('http://localhost:3333/api/admin/events/statistics', {
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => res.json())
-      .then(data => setStats(data.data.global))
+      .then((res) => res.json())
+      .then((data) => setStats(data.data.global))
 
-  fetch('http://localhost:3333/api/admin/events/sales', {
-      headers: { Authorization: `Bearer ${token}` }
+    fetch('http://localhost:3333/api/admin/events/sales', {
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => res.json())
-      .then(data => setEvents(data.data))
+      .then((res) => res.json())
+      .then((data) => setEvents(data.data))
   }, [])
 
   // Conectar WebSocket
@@ -231,7 +243,7 @@ function SalesDashboard() {
   return (
     <div>
       <h1>Panel de Ventas</h1>
-      
+
       {/* Tarjetas de Estadísticas */}
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
@@ -273,20 +285,28 @@ function SalesDashboard() {
               <td>{event.ticketsAvailable}</td>
               <td>{event.ticketsTotal}</td>
               <td>
-                <div style={{ 
-                  width: '100px', 
-                  height: '20px', 
-                  backgroundColor: '#e0e0e0',
-                  borderRadius: '10px',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    width: `${event.occupancyPercentage}%`,
-                    height: '100%',
-                    backgroundColor: event.occupancyPercentage > 80 ? '#4caf50' : 
-                                   event.occupancyPercentage > 50 ? '#ff9800' : '#f44336',
-                    transition: 'width 0.3s'
-                  }} />
+                <div
+                  style={{
+                    width: '100px',
+                    height: '20px',
+                    backgroundColor: '#e0e0e0',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${event.occupancyPercentage}%`,
+                      height: '100%',
+                      backgroundColor:
+                        event.occupancyPercentage > 80
+                          ? '#4caf50'
+                          : event.occupancyPercentage > 50
+                            ? '#ff9800'
+                            : '#f44336',
+                      transition: 'width 0.3s',
+                    }}
+                  />
                 </div>
                 {event.occupancyPercentage}%
               </td>
@@ -308,6 +328,7 @@ export default SalesDashboard
 Para cumplir con el criterio de "visualización gráfica", usar librerías como:
 
 ### Opciones Recomendadas:
+
 - **Chart.js** (más popular, fácil de usar)
 - **Recharts** (componentes React nativos)
 - **ApexCharts** (muy completo, interactivo)
@@ -324,41 +345,44 @@ import { Bar, Doughnut } from 'react-chartjs-2'
 
 function SalesCharts({ events, stats }) {
   const occupancyData = {
-    labels: events.map(e => e.title),
-    datasets: [{
-      label: '% Ocupación',
-      data: events.map(e => e.occupancyPercentage),
-      backgroundColor: events.map(e => 
-        e.occupancyPercentage > 80 ? 'rgba(76, 175, 80, 0.6)' :
-        e.occupancyPercentage > 50 ? 'rgba(255, 152, 0, 0.6)' :
-        'rgba(244, 67, 54, 0.6)'
-      ),
-    }]
+    labels: events.map((e) => e.title),
+    datasets: [
+      {
+        label: '% Ocupación',
+        data: events.map((e) => e.occupancyPercentage),
+        backgroundColor: events.map((e) =>
+          e.occupancyPercentage > 80
+            ? 'rgba(76, 175, 80, 0.6)'
+            : e.occupancyPercentage > 50
+              ? 'rgba(255, 152, 0, 0.6)'
+              : 'rgba(244, 67, 54, 0.6)'
+        ),
+      },
+    ],
   }
 
   const revenueData = {
     labels: ['Ingresos Actuales', 'Ingresos Potenciales'],
-    datasets: [{
-      data: [
-        stats.totalRevenue, 
-        stats.potentialRevenue - stats.totalRevenue
-      ],
-      backgroundColor: [
-        'rgba(54, 162, 235, 0.8)',
-        'rgba(255, 206, 86, 0.8)'
-      ],
-    }]
+    datasets: [
+      {
+        data: [stats.totalRevenue, stats.potentialRevenue - stats.totalRevenue],
+        backgroundColor: ['rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)'],
+      },
+    ],
   }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px' }}>
       <div>
         <h3>Ocupación por Evento</h3>
-        <Bar data={occupancyData} options={{
-          scales: {
-            y: { beginAtZero: true, max: 100 }
-          }
-        }} />
+        <Bar
+          data={occupancyData}
+          options={{
+            scales: {
+              y: { beginAtZero: true, max: 100 },
+            },
+          }}
+        />
       </div>
       <div>
         <h3>Distribución de Ingresos</h3>
@@ -373,12 +397,12 @@ function SalesCharts({ events, stats }) {
 
 ## ✅ Criterios de Aceptación - Verificación Final
 
-| Criterio | Estado | Evidencia |
-|----------|--------|-----------|
-| **Mostrar listado de eventos** con columnas requeridas | ✅ CUMPLIDO | Endpoint `/api/admin/events/sales` retorna todos los datos |
-| **Incorporar visualización gráfica** del avance de ventas | ✅ CUMPLIDO | Datos preparados, ejemplos de gráficos documentados |
-| **Asegurar acceso restringido** a usuarios con rol administrador | ✅ CUMPLIDO | Middleware `role({ roles: ['ADMIN'] })` aplicado |
-| **Actualización en tiempo real** (extra) | ✅ CUMPLIDO | WebSockets implementado y funcional |
+| Criterio                                                         | Estado      | Evidencia                                                  |
+| ---------------------------------------------------------------- | ----------- | ---------------------------------------------------------- |
+| **Mostrar listado de eventos** con columnas requeridas           | ✅ CUMPLIDO | Endpoint `/api/admin/events/sales` retorna todos los datos |
+| **Incorporar visualización gráfica** del avance de ventas        | ✅ CUMPLIDO | Datos preparados, ejemplos de gráficos documentados        |
+| **Asegurar acceso restringido** a usuarios con rol administrador | ✅ CUMPLIDO | Middleware `role({ roles: ['ADMIN'] })` aplicado           |
+| **Actualización en tiempo real** (extra)                         | ✅ CUMPLIDO | WebSockets implementado y funcional                        |
 
 ---
 
@@ -395,6 +419,7 @@ function SalesCharts({ events, stats }) {
 ## 🎉 Beneficios de la Implementación
 
 ### Para Administradores:
+
 1. ✅ **Visibilidad completa** de ventas en tiempo real
 2. ✅ **Identificación rápida** de eventos con baja ocupación
 3. ✅ **Métricas de ingresos** actualizadas automáticamente
@@ -402,6 +427,7 @@ function SalesCharts({ events, stats }) {
 5. ✅ **Datos históricos** con paginación
 
 ### Para el Sistema:
+
 1. ✅ **Consultas optimizadas** con SQL directo
 2. ✅ **Arquitectura escalable** con WebSockets
 3. ✅ **Seguridad robusta** con autenticación y roles
@@ -413,6 +439,7 @@ function SalesCharts({ events, stats }) {
 ## 🚀 Próximos Pasos Sugeridos
 
 ### Backend:
+
 - [ ] Agregar filtros avanzados (por fecha, compañía, venue)
 - [ ] Implementar exportación a CSV/PDF
 - [ ] Agregar caché para estadísticas globales
@@ -420,6 +447,7 @@ function SalesCharts({ events, stats }) {
 - [ ] Implementar métricas de conversión
 
 ### Frontend:
+
 - [ ] Implementar dashboard completo con gráficos
 - [ ] Agregar sistema de notificaciones push
 - [ ] Crear vista de comparación de eventos
@@ -446,7 +474,7 @@ La Historia de Usuario **"Panel de ventas y estadísticas"** ha sido implementad
 ✅ Documentación completa y detallada  
 ✅ Código compilado sin errores  
 ✅ Seguridad y autenticación implementadas  
-✅ Ejemplos de uso para frontend  
+✅ Ejemplos de uso para frontend
 
 El frontend ahora puede consumir estos endpoints para crear un dashboard interactivo con gráficos y actualizaciones en tiempo real.
 
