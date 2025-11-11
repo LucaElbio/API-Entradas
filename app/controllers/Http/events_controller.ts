@@ -1,5 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Event from '../../models/event.js'
+import EventStatus from '../../models/event_status.js'
+import Venue from '../../models/venue.js'
+import { DateTime } from 'luxon'
 
 export default class EventsController {
   public async index({ request, response }: HttpContext) {
@@ -90,6 +93,230 @@ export default class EventsController {
       })
     } catch (error) {
       console.error('Error en show:', error)
+      return response.status(500).json({
+        message: 'Error interno del servidor',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * POST /api/events
+   */
+  public async create({ auth, request, response }: HttpContext) {
+    try {
+      const user = auth.user!
+      const { title, description, datetime, price, venueId, ticketsTotal } = request.only([
+        'title',
+        'description',
+        'datetime',
+        'price',
+        'venueId',
+        'ticketsTotal',
+      ])
+
+      if (!title || !description || !datetime || !price || !venueId || !ticketsTotal) {
+        return response.status(400).json({ message: 'Faltan campos obligatorios' })
+      }
+
+      const ticketsTotalNumber = Number(ticketsTotal)
+      if (Number.isNaN(ticketsTotalNumber) || ticketsTotalNumber <= 0) {
+        return response.status(400).json({
+          message: 'La cantidad de entradas debe ser mayor a 0',
+        })
+      }
+
+      const priceNumber = Number(price)
+      if (Number.isNaN(priceNumber) || priceNumber < 0) {
+        return response.status(400).json({
+          message: 'El precio debe ser un número válido mayor o igual a 0',
+        })
+      }
+
+      const eventDateTime = DateTime.fromISO(datetime)
+      if (!eventDateTime.isValid) {
+        return response.status(400).json({ message: 'El formato de fecha es inválido' })
+      }
+
+      if (eventDateTime <= DateTime.now()) {
+        return response.status(400).json({ message: 'La fecha del evento debe ser futura' })
+      }
+
+      const venue = await Venue.find(venueId)
+      if (!venue) {
+        return response.status(404).json({ message: 'Lugar no encontrado' })
+      }
+
+      if (ticketsTotalNumber > venue.capacity) {
+        return response.status(400).json({
+          message: `La cantidad de entradas (${ticketsTotalNumber}) excede la capacidad del lugar (${venue.capacity})`,
+        })
+      }
+
+      const draftStatus = await EventStatus.findByOrFail('code', 'DRAFT')
+
+      const event = await Event.create({
+        title,
+        description,
+        datetime: eventDateTime,
+        price: priceNumber,
+        venueId: Number(venueId),
+        ticketsTotal: ticketsTotalNumber,
+        ticketsAvailable: ticketsTotalNumber,
+        statusId: draftStatus.id,
+        companyId: user.companyId,
+        createdBy: user.id,
+      })
+
+      await event.load('venue')
+      await event.load('status')
+
+      return response.status(201).json({
+        message: 'Evento creado exitosamente',
+        data: event,
+      })
+    } catch (error) {
+      console.error('Error en create event:', error)
+      return response.status(500).json({
+        message: 'Error interno del servidor',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * PUT /api/events/:id
+   */
+  public async update({ auth, params, request, response }: HttpContext) {
+    try {
+      const user = auth.user!
+      const { title, description, datetime, price, venueId, ticketsTotal, statusId } =
+        request.only([
+          'title',
+          'description',
+          'datetime',
+          'price',
+          'venueId',
+          'ticketsTotal',
+          'statusId',
+        ])
+
+      const event = await Event.query().where('id', params.id).preload('status').first()
+      if (!event) {
+        return response.status(404).json({ message: 'Evento no encontrado' })
+      }
+
+      await user.load('role')
+      if (user.role.code !== 'ADMIN' && event.companyId !== user.companyId) {
+        return response.status(403).json({
+          message: 'No tiene permisos para editar este evento',
+        })
+      }
+
+      if (title) event.title = title
+      if (description) event.description = description
+
+      if (datetime) {
+        const eventDateTime = DateTime.fromISO(datetime)
+        if (!eventDateTime.isValid) {
+          return response.status(400).json({ message: 'El formato de fecha es inválido' })
+        }
+        if (eventDateTime <= DateTime.now()) {
+          return response.status(400).json({ message: 'La fecha del evento debe ser futura' })
+        }
+        event.datetime = eventDateTime
+      }
+
+      if (price !== undefined) {
+        const priceNumber = Number(price)
+        if (Number.isNaN(priceNumber) || priceNumber < 0) {
+          return response.status(400).json({
+            message: 'El precio debe ser un número válido mayor o igual a 0',
+          })
+        }
+        event.price = priceNumber
+      }
+
+      if (venueId) {
+        const venue = await Venue.find(venueId)
+        if (!venue) {
+          return response.status(404).json({ message: 'Lugar no encontrado' })
+        }
+        event.venueId = Number(venueId)
+      }
+
+      if (ticketsTotal !== undefined) {
+        const ticketsTotalNumber = Number(ticketsTotal)
+        if (Number.isNaN(ticketsTotalNumber) || ticketsTotalNumber <= 0) {
+          return response.status(400).json({
+            message: 'La cantidad de entradas debe ser mayor a 0',
+          })
+        }
+
+        const ticketsSold = event.ticketsTotal - event.ticketsAvailable
+        if (ticketsTotalNumber < ticketsSold) {
+          return response.status(400).json({
+            message: `No se puede reducir la cantidad total a ${ticketsTotalNumber}. Ya se vendieron ${ticketsSold} entradas`,
+          })
+        }
+
+        const difference = ticketsTotalNumber - event.ticketsTotal
+        event.ticketsTotal = ticketsTotalNumber
+        event.ticketsAvailable = event.ticketsAvailable + difference
+      }
+
+      if (statusId) {
+        const status = await EventStatus.find(statusId)
+        if (!status) {
+          return response.status(404).json({ message: 'Estado no encontrado' })
+        }
+        event.statusId = Number(statusId)
+      }
+
+      await event.save()
+      await event.load('venue')
+      await event.load('status')
+
+      return response.json({ message: 'Evento actualizado exitosamente', data: event })
+    } catch (error) {
+      console.error('Error en update event:', error)
+      return response.status(500).json({
+        message: 'Error interno del servidor',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * DELETE /api/events/:id
+   */
+  public async destroy({ auth, params, response }: HttpContext) {
+    try {
+      const user = auth.user!
+      const event = await Event.find(params.id)
+      if (!event) {
+        return response.status(404).json({ message: 'Evento no encontrado' })
+      }
+
+      await user.load('role')
+      if (user.role.code !== 'ADMIN' && event.companyId !== user.companyId) {
+        return response.status(403).json({
+          message: 'No tiene permisos para eliminar este evento',
+        })
+      }
+
+      const ticketsSold = event.ticketsTotal - event.ticketsAvailable
+      if (ticketsSold > 0) {
+        return response.status(400).json({
+          message: 'No se puede eliminar un evento con entradas vendidas',
+          ticketsSold,
+        })
+      }
+
+      await event.delete()
+      return response.json({ message: 'Evento eliminado exitosamente' })
+    } catch (error) {
+      console.error('Error en destroy event:', error)
       return response.status(500).json({
         message: 'Error interno del servidor',
         error: error.message,

@@ -36,7 +36,7 @@ new Ignitor(APP_ROOT, { importer: IMPORTER })
     })
     app.ready(async () => {
       // Import cron jobs after the app is ready
-      await import('#start/cron')
+      // await import('#start/cron') // DISABLED: Cron job disabled to avoid MySQL connection errors
     })
     app.listen('SIGTERM', () => app.terminate())
     app.listenIf(app.managedByPm2, 'SIGINT', () => app.terminate())

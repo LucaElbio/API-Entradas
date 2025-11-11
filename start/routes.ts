@@ -1,15 +1,43 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 
-// Rutas de eventos
 router
   .group(() => {
+    // Eventos - públicos
     router
       .group(() => {
         router.get('/', '#controllers/Http/events_controller.index')
         router.get('/:id', '#controllers/Http/events_controller.show')
       })
       .prefix('/events')
+
+    // Eventos - protegidos
+    router
+      .group(() => {
+        router.post('/', '#controllers/Http/events_controller.create')
+        router.put('/:id', '#controllers/Http/events_controller.update')
+        router.delete('/:id', '#controllers/Http/events_controller.destroy')
+      })
+      .prefix('/events')
+      .use(middleware.auth())
+
+    // Venues - públicos
+    router
+      .group(() => {
+        router.get('/', '#controllers/Http/venues_controller.index')
+        router.get('/:id', '#controllers/Http/venues_controller.show')
+      })
+      .prefix('/venues')
+
+    // Venues - protegidos
+    router
+      .group(() => {
+        router.post('/', '#controllers/Http/venues_controller.create')
+        router.put('/:id', '#controllers/Http/venues_controller.update')
+        router.delete('/:id', '#controllers/Http/venues_controller.destroy')
+      })
+      .prefix('/venues')
+      .use(middleware.auth())
 
     router
       .group(() => {
@@ -31,17 +59,18 @@ router
     // Rutas de tickets (requieren autenticación)
     router
       .group(() => {
+        // Rutas específicas PRIMERO
+        router.get('/mine', '#controllers/Http/tickets_controller.mine')
+        router.post('/verify', '#controllers/Http/tickets_controller.verify')
+        router.post('/pay', '#controllers/Http/payments_controller.pay')
+
+        // Rutas con parámetros DESPUÉS
         router.get('/', '#controllers/Http/tickets_controller.index')
         router.get('/:id', '#controllers/Http/tickets_controller.show')
-        router.post('/verify', '#controllers/Http/tickets_controller.verify')
         router.post('/:id/use', '#controllers/Http/tickets_controller.use')
-        router.get('/mine', '#controllers/Http/tickets_controller.mine')
         router.post('/:id/transfer', '#controllers/Http/tickets_controller.transfer')
         router.post('/:id/transfer/accept', '#controllers/Http/tickets_controller.acceptTransfer')
         router.post('/:id/transfer/reject', '#controllers/Http/tickets_controller.rejectTransfer')
-
-        // BE-Endpoint POST /tickets/pay - Process payment and generate tickets
-        router.post('/pay', '#controllers/Http/payments_controller.pay')
       })
       .prefix('/tickets')
       .use(middleware.auth())
