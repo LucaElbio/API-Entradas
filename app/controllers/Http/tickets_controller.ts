@@ -11,6 +11,62 @@ import Reservation from '#models/reservation'
 
 export default class TicketsController {
   /**
+   * GET /api/tickets/transfers/pending
+   * Ver solicitudes de transferencia pendientes recibidas
+   */
+  public async pendingTransfers({ auth, response }: HttpContext) {
+    try {
+      const user = auth.user!
+      const pendingStatus = await TransferStatus.findByOrFail('code', 'PENDING')
+
+      const transfers = await TicketTransfer.query()
+        .where('to_user_id', user.id)
+        .where('status_id', pendingStatus.id)
+        .preload('ticket', (ticketQuery) => {
+          ticketQuery.preload('event', (eventQuery) => {
+            eventQuery.preload('venue')
+          })
+        })
+        .preload('fromUser')
+        .orderBy('created_at', 'desc')
+
+      return response.json({
+        message: 'Transferencias pendientes',
+        data: transfers.map((transfer) => ({
+          id: transfer.id,
+          ticketId: transfer.ticketId,
+          expiresAt: transfer.expiresAt,
+          createdAt: transfer.createdAt,
+          ticket: {
+            id: transfer.ticket.id,
+            qrCode: transfer.ticket.qrCode,
+          },
+          event: {
+            id: transfer.ticket.event.id,
+            title: transfer.ticket.event.title,
+            datetime: transfer.ticket.event.datetime,
+            venue: {
+              name: transfer.ticket.event.venue.name,
+              address: transfer.ticket.event.venue.address,
+            },
+          },
+          from: {
+            id: transfer.fromUser.id,
+            name: `${transfer.fromUser.firstName} ${transfer.fromUser.lastName}`,
+            email: transfer.fromUser.email,
+          },
+        })),
+      })
+    } catch (error) {
+      console.error('Error en pendingTransfers:', error)
+      return response.status(500).json({
+        message: 'Error interno del servidor',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
    * GET /api/tickets/mine
    * Ver mis entradas organizadas por eventos pasados y futuros
    */
@@ -347,17 +403,17 @@ export default class TicketsController {
    * GET /tickets
    * Get all tickets for the authenticated user
    */
-  async index({ auth, response }: HttpContext) {
+  async index({ auth, response, logger }: HttpContext) {
     try {
       const user = auth.user!
-      console.log('Fetching tickets for user:', user.id)
+      logger.info('Fetching tickets for user:', user.id)
       const tickets = await Ticket.query()
         .where('owner_id', user.id)
         .preload('event')
         .preload('status')
         .preload('reservation')
         .orderBy('created_at', 'desc')
-      console.log(`Found ${tickets.length} tickets for user ${user.id}`)
+      logger.info(`Found ${tickets.length} tickets for user ${user.id}`)
       return response.ok({
         message: 'Tickets obtenidos exitosamente',
         data: tickets.map((ticket) => ({
