@@ -8,6 +8,7 @@ import Payment from '#models/payment'
 import Ticket from '#models/ticket'
 import QrService from '#services/qr_service'
 import MailService from '#services/mail_service'
+import SalesStatsService from '#services/sales_stats_service'
 import db from '@adonisjs/lucid/services/db'
 
 // Constants
@@ -18,23 +19,19 @@ export default class PaymentsController {
    * POST /tickets/pay
    * Process payment for a reservation and generate tickets
    */
-  async pay({ request, response }: HttpContext) {
-    const { reservation_id: reservationId } = request.only(['reservation_id'])
-
-    if (!reservationId) {
-      return response.badRequest({
-        error: 'Validation failed',
-        message: 'El campo reservation_id es requerido',
-      })
-    }
-
+  async pay({ response, auth }: HttpContext) {
     // Use transaction to ensure data consistency
     const trx = await db.transaction()
 
     try {
+      const pendingStatus = await ReservationStatus.query({ client: trx })
+        .where('code', 'PENDING')
+        .firstOrFail()
+
       // 1. Find the reservation with relations
       const reservation = await Reservation.query({ client: trx })
-        .where('id', reservationId)
+        .where('user_id', auth.user!.id)
+        .andWhere('status_id', pendingStatus.id)
         .preload('status')
         .preload('event', (eventQuery) => {
           eventQuery.preload('venue')
@@ -65,11 +62,6 @@ export default class PaymentsController {
           message: `No hay suficientes tickets disponibles. Disponibles: ${reservation.event.ticketsAvailable}, solicitados: ${reservation.quantity}`,
         })
       }
-
-      // 5. Validate reservation status - should be PENDING
-      const pendingStatus = await ReservationStatus.query({ client: trx })
-        .where('code', 'PENDING')
-        .firstOrFail()
 
       if (reservation.statusId !== pendingStatus.id) {
         return response.badRequest({
@@ -154,8 +146,7 @@ export default class PaymentsController {
         // Generate QR code with the ticket ID
         const { qrCode, qrImageUrl } = await qrService.generateTicketQR(
           ticket.id,
-          reservation.eventId,
-          reservation.userId
+          reservation.eventId
         )
 
         // Update ticket with QR code
@@ -169,7 +160,16 @@ export default class PaymentsController {
       // 12. Commit transaction (all data saved successfully)
       await trx.commit()
 
-      // 13. Send email with tickets (async, non-blocking)
+      // 13. Emitir actualización de estadísticas en tiempo real
+      try {
+        await SalesStatsService.broadcastEventStats(reservation.eventId)
+        await SalesStatsService.broadcastSalesList()
+        console.log('📊 Sales statistics updated in real-time')
+      } catch (statsError) {
+        console.error('⚠️  Error broadcasting sales stats:', statsError)
+      }
+
+      // 14. Send email with tickets (async, non-blocking)
       // This is done AFTER commit to ensure data consistency
       try {
         const mailService = new MailService()
@@ -209,7 +209,7 @@ export default class PaymentsController {
         console.error('⚠️  Error sending confirmation email:', emailError)
       }
 
-      // 14. Return success response
+      // 15. Return success response
       return response.ok({
         message: 'Pago procesado exitosamente',
         data: {

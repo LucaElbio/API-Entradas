@@ -24,9 +24,9 @@ export default class ReservationsController {
    * The reservation will automatically expire if not paid within the time limit
    */
   async create({ request, response, auth }: HttpContext) {
-    const user = auth.getUserOrFail()
+    const user = auth.user!
     const { event_id: eventId, quantity } = request.only(['event_id', 'quantity'])
-
+    console.log('Creating reservation for user:', user.id, 'event:', eventId, 'quantity:', quantity)
     // Validate input
     if (!eventId || !quantity) {
       return response.badRequest({
@@ -54,11 +54,14 @@ export default class ReservationsController {
     const trx = await db.transaction()
 
     try {
+      console.log('Starting reservation transaction for user:', user.id)
       // 1. Find the event and lock the row to prevent race conditions
       const event = await Event.query({ client: trx })
         .where('id', eventId)
         .forUpdate() // Lock the row for update
         .firstOrFail()
+
+      console.log('Event found:', event.id, 'Tickets available:', event.ticketsAvailable)
 
       // 2. Check if there are enough available tickets
       if (event.ticketsAvailable < quantity) {
@@ -69,17 +72,21 @@ export default class ReservationsController {
         })
       }
 
+      console.log('Sufficient tickets available for reservation')
+
       // 3. Calculate total amount
       const totalAmount = event.price * quantity
 
       // 5. Set expiration time (15 minutes from now)
       const expiresAt = DateTime.now().plus({ minutes: RESERVATION_EXPIRATION_MINUTES })
 
+      console.log('Reservation will expire at:', expiresAt.toISO())
       // 6. Get PENDING status
       const pendingStatus = await ReservationStatus.query({ client: trx })
         .where('code', 'PENDING')
         .firstOrFail()
 
+      console.log('Pending status ID:', pendingStatus)
       // 7. Create the reservation
       const reservation = await Reservation.create(
         {
@@ -95,8 +102,9 @@ export default class ReservationsController {
 
       // 8. Decrement available tickets (reserved temporarily)
       event.ticketsAvailable -= quantity
+      console.log('Decrementing tickets available. Availability:', event.ticketsAvailable)
       await event.save()
-
+      console.log('Decremented tickets available. New availability:', event.ticketsAvailable)
       // 9. Commit transaction
       await trx.commit()
 
@@ -104,8 +112,9 @@ export default class ReservationsController {
       await reservation.load('event', (eventQuery) => {
         eventQuery.preload('venue')
       })
+      console.log('Loaded event relation for reservation')
       await reservation.load('status')
-
+      console.log('Loaded status relation for reservation')
       // 11. Return success response
       return response.created({
         message: 'Reserva creada exitosamente',
@@ -133,7 +142,7 @@ export default class ReservationsController {
     } catch (error) {
       // Rollback transaction on error
       await trx.rollback()
-
+      console.log('Transaction rolled back due to error', error)
       // Handle not found errors
       if (error.code === 'E_ROW_NOT_FOUND') {
         return response.notFound({
@@ -157,7 +166,7 @@ export default class ReservationsController {
    * Get all reservations for the authenticated user
    */
   async index({ response, auth }: HttpContext) {
-    const user = auth.getUserOrFail()
+    const user = auth.user!
 
     try {
       const reservations = await Reservation.query()
@@ -206,7 +215,7 @@ export default class ReservationsController {
    * Get a specific reservation by ID
    */
   async show({ params, response, auth }: HttpContext) {
-    const user = auth.getUserOrFail()
+    const user = auth.user!
     const { id } = params
 
     try {
@@ -264,7 +273,7 @@ export default class ReservationsController {
    * Cancel a reservation and return tickets to stock
    */
   async cancel({ params, response, auth }: HttpContext) {
-    const user = auth.getUserOrFail()
+    const user = auth.user!
     const { id } = params
 
     const trx = await db.transaction()
