@@ -81,11 +81,11 @@ export default class MailService {
 
     // Prepare attachments (QR codes)
     const attachments = tickets
-      .filter((ticket) => ticket.qrImageUrl !== null)
+      .filter((ticket) => ticket.qrImageUrl !== null && ticket.qrImageUrl !== undefined)
       .map((ticket) => ({
         filename: `ticket-${ticket.id}-qr.png`,
         content: ticket.qrImageUrl!.split(',')[1], // Extract base64 data
-        encoding: 'base64',
+        encoding: 'base64' as const,
         cid: `qr-${ticket.id}`, // Content ID for inline images
       }))
 
@@ -132,12 +132,13 @@ export default class MailService {
 
     // Generate QR images inline
     const qrImages = tickets
+      .filter((ticket) => ticket.qrImageUrl !== null && ticket.qrImageUrl !== undefined)
       .map(
         (ticket) => `
       <div style="text-align: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
         <p style="margin: 0 0 10px 0; font-weight: bold; color: #495057;">Entrada #${ticket.id}</p>
         <img src="cid:qr-${ticket.id}" alt="QR Code" style="width: 250px; height: 250px; border: 2px solid #dee2e6; border-radius: 4px;" />
-        <p style="margin: 10px 0 0 0; font-size: 12px; color: #6c757d;">Código: ${ticket.qrCode.split('-')[0]}</p>
+        <p style="margin: 10px 0 0 0; font-size: 12px; color: #6c757d;">Código: ${ticket.qrCode.split('|')[0]}</p>
       </div>
     `
       )
