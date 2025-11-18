@@ -12,30 +12,21 @@ jest.mock('#models/event', () => ({
   },
 }))
 
+jest.mock('#models/event_status', () => ({
+  __esModule: true,
+  default: {},
+}))
+
+jest.mock('#models/venue', () => ({
+  __esModule: true,
+  default: {},
+}))
+
 // Importar el controlador después de definir los mocks
 const EventsController = require('#controllers/Http/events_controller').default
 
-// Helper para context
-function createHttpContext({ params = {} as any } = {}) {
-  const state: any = { status: 0, body: null }
-  const response = {
-    json: (data: any) => {
-      state.status = state.status || 200
-      state.body = data
-      return { statusCode: state.status, body: data }
-    },
-    status: (code: number) => {
-      state.status = code
-      return {
-        json: (data: any) => {
-          state.body = data
-          return { statusCode: code, body: data }
-        },
-      }
-    },
-  }
-  return { params, response, state }
-}
+// Importar helper compartido
+import { createHttpContext } from './helpers/http_context_helper'
 
 describe('EventsController - Detalle de evento (show)', () => {
   beforeEach(() => {

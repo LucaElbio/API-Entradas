@@ -29,6 +29,16 @@ jest.mock('#models/event', () => ({
   },
 }))
 
+jest.mock('#models/event_status', () => ({
+  __esModule: true,
+  default: {},
+}))
+
+jest.mock('#models/venue', () => ({
+  __esModule: true,
+  default: {},
+}))
+
 const EventsControllerIndex = require('#controllers/Http/events_controller').default
 
 function createHttpContextIndex({ qs = {} as any } = {}) {

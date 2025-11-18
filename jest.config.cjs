@@ -14,6 +14,9 @@ module.exports = {
     '^#config/(.*)$': '<rootDir>/config/$1',
     // Mapear import relativo de ESM en el controlador a TS durante tests
     '^\.\.\/\.\.\/models\/event\.js$': '<rootDir>/app/models/event.ts',
+    '^\.\.\/\.\.\/models\/event_status\.js$': '<rootDir>/app/models/event_status.ts',
+    '^\.\.\/\.\.\/models\/venue\.js$': '<rootDir>/app/models/venue.ts',
+    '^\.\.\/\.\.\/models\/company\.js$': '<rootDir>/app/models/company.ts',
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
   transform: {
