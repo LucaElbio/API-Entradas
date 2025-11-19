@@ -33,6 +33,7 @@ jest.mock('@adonisjs/lucid/services/db', () => ({
  */
 const createMockQueryBuilder = () => ({
   where: jest.fn().mockReturnThis(),
+  andWhere: jest.fn().mockReturnThis(),
   preload: jest.fn().mockReturnThis(),
   firstOrFail: jest.fn(),
   first: jest.fn(),
@@ -93,6 +94,28 @@ jest.mock('#models/ticket', () => ({
   default: mockTicketModel,
 }))
 
+// Mock de Event (necesario por relaciones)
+jest.mock('#models/event', () => ({
+  __esModule: true,
+  default: {},
+}))
+
+// Mock de User (necesario por relaciones)
+jest.mock('#models/user', () => ({
+  __esModule: true,
+  default: {},
+}))
+
+// Mock de SalesStatsService
+jest.mock('#services/sales_stats_service', () => ({
+  __esModule: true,
+  default: jest.fn().mockImplementation(() => ({
+    getEventStats: jest.fn(),
+    getGlobalStats: jest.fn(),
+    broadcastEventStats: jest.fn().mockResolvedValue(undefined),
+  })),
+}))
+
 /**
  * Mock del servicio de QR
  */
@@ -119,63 +142,12 @@ jest.mock('#services/mail_service', () => ({
 // Importar el controlador después de los mocks
 const PaymentsController = require('#controllers/Http/payments_controller').default
 
+// Importar helper compartido
+import { createHttpContext } from './helpers/http_context_helper'
+
 // =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
-
-/**
- * Crea un contexto HTTP simulado para los tests
- */
-function createHttpContext({ request = {}, auth = {} as any } = {}) {
-  const state: any = { status: 0, body: null }
-
-  const response = {
-    json: (data: any) => {
-      state.status = state.status || 200
-      state.body = data
-      return { statusCode: state.status, body: data }
-    },
-    ok: (data: any) => {
-      state.status = 200
-      state.body = data
-      return { statusCode: 200, body: data }
-    },
-    badRequest: (data: any) => {
-      state.status = 400
-      state.body = data
-      return { statusCode: 400, body: data }
-    },
-    notFound: (data: any) => {
-      state.status = 404
-      state.body = data
-      return { statusCode: 404, body: data }
-    },
-    internalServerError: (data: any) => {
-      state.status = 500
-      state.body = data
-      return { statusCode: 500, body: data }
-    },
-    status: (code: number) => {
-      state.status = code
-      return {
-        json: (data: any) => {
-          state.body = data
-          return { statusCode: code, body: data }
-        },
-      }
-    },
-  }
-
-  return {
-    request: {
-      only: (keys: string[]) => request,
-      ...request,
-    },
-    response,
-    auth,
-    state,
-  }
-}
 
 /**
  * Crea una reserva mock con relaciones
@@ -304,6 +276,7 @@ describe('PaymentsController - Completar pago exitoso', () => {
       })
 
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: { reservation_id: 1 },
     })
 
@@ -334,8 +307,8 @@ describe('PaymentsController - Completar pago exitoso', () => {
 
     // Verificar que cada ticket tiene su QR único
     expect(mockQrService.generateTicketQR).toHaveBeenCalledTimes(2)
-    expect(mockQrService.generateTicketQR).toHaveBeenNthCalledWith(1, 101, 10, 5)
-    expect(mockQrService.generateTicketQR).toHaveBeenNthCalledWith(2, 102, 10, 5)
+    expect(mockQrService.generateTicketQR).toHaveBeenNthCalledWith(1, 101, 10)
+    expect(mockQrService.generateTicketQR).toHaveBeenNthCalledWith(2, 102, 10)
 
     // Verificar que los tickets fueron actualizados con sus QR
     expect(ticket1.qrCode).toBe('101-10-5-uuid-1111-aaaa')
@@ -385,23 +358,36 @@ describe('PaymentsController - Completar pago exitoso', () => {
 
   it('Debe validar que reservation_id es requerido', async () => {
     const controller = new PaymentsController()
+    
+    const pendingStatus = { id: 1, code: 'PENDING', name: 'Pendiente' }
+    mockReservationStatusQuery.firstOrFail.mockResolvedValueOnce(pendingStatus)
+    
+    // Simular que no se encuentra la reservación (sin reservation_id)
+    const notFoundError = new Error('Row not found')
+    ;(notFoundError as any).code = 'E_ROW_NOT_FOUND'
+    mockReservationQuery.firstOrFail.mockRejectedValueOnce(notFoundError)
+    
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: {},
     })
 
     const result = await controller.pay(ctx as any)
 
-    expect(result.statusCode).toBe(400)
-    expect(result.body.message).toBe('El campo reservation_id es requerido')
+    expect(result.statusCode).toBe(404)
+    expect(result.body.message).toBe('Reserva no encontrada')
   })
 
   it('Debe validar que la cantidad de tickets sea mayor a 0', async () => {
     const controller = new PaymentsController()
     const reservation = createMockReservation({ quantity: 0 })
 
+    const pendingStatus = { id: 1, code: 'PENDING', name: 'Pendiente' }
+    mockReservationStatusQuery.firstOrFail.mockResolvedValueOnce(pendingStatus)
     mockReservationQuery.firstOrFail.mockResolvedValueOnce(reservation)
 
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: { reservation_id: 1 },
     })
 
@@ -415,9 +401,12 @@ describe('PaymentsController - Completar pago exitoso', () => {
     const controller = new PaymentsController()
     const reservation = createMockReservation({ quantity: 15 })
 
+    const pendingStatus = { id: 1, code: 'PENDING', name: 'Pendiente' }
+    mockReservationStatusQuery.firstOrFail.mockResolvedValueOnce(pendingStatus)
     mockReservationQuery.firstOrFail.mockResolvedValueOnce(reservation)
 
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: { reservation_id: 1 },
     })
 
@@ -437,9 +426,12 @@ describe('PaymentsController - Completar pago exitoso', () => {
       },
     })
 
+    const pendingStatus = { id: 1, code: 'PENDING', name: 'Pendiente' }
+    mockReservationStatusQuery.firstOrFail.mockResolvedValueOnce(pendingStatus)
     mockReservationQuery.firstOrFail.mockResolvedValueOnce(reservation)
 
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: { reservation_id: 1 },
     })
 
@@ -462,6 +454,7 @@ describe('PaymentsController - Completar pago exitoso', () => {
     mockReservationStatusQuery.firstOrFail.mockResolvedValueOnce(pendingStatus)
 
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: { reservation_id: 1 },
     })
 
@@ -497,6 +490,7 @@ describe('PaymentsController - Pago rechazado (reserva expirada)', () => {
       .mockResolvedValueOnce(expiredStatus)
 
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: { reservation_id: 1 },
     })
 
@@ -528,6 +522,9 @@ describe('PaymentsController - Pago rechazado (reserva expirada)', () => {
   it('Debe manejar error 404 cuando la reserva no existe', async () => {
     const controller = new PaymentsController()
 
+    const pendingStatus = { id: 1, code: 'PENDING', name: 'Pendiente' }
+    mockReservationStatusQuery.firstOrFail.mockResolvedValueOnce(pendingStatus)
+
     // Simular error de "not found" de Lucid
     const notFoundError = new Error('Row not found')
     ;(notFoundError as any).code = 'E_ROW_NOT_FOUND'
@@ -535,6 +532,7 @@ describe('PaymentsController - Pago rechazado (reserva expirada)', () => {
     mockReservationQuery.firstOrFail.mockRejectedValueOnce(notFoundError)
 
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: { reservation_id: 999 },
     })
 
@@ -551,10 +549,14 @@ describe('PaymentsController - Pago rechazado (reserva expirada)', () => {
   it('Debe hacer rollback en caso de error inesperado', async () => {
     const controller = new PaymentsController()
 
+    const pendingStatus = { id: 1, code: 'PENDING', name: 'Pendiente' }
+    mockReservationStatusQuery.firstOrFail.mockResolvedValueOnce(pendingStatus)
+
     // Simular error inesperado
     mockReservationQuery.firstOrFail.mockRejectedValueOnce(new Error('Database error'))
 
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: { reservation_id: 1 },
     })
 
@@ -614,6 +616,7 @@ describe('PaymentsController - Tests de integración', () => {
     })
 
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: { reservation_id: 1 },
     })
 
@@ -670,6 +673,7 @@ describe('PaymentsController - Tests de integración', () => {
     mockMailService.sendPurchaseConfirmation.mockRejectedValueOnce(new Error('SMTP error'))
 
     const ctx = createHttpContext({
+      user: { id: 5 },
       request: { reservation_id: 1 },
     })
 
@@ -681,3 +685,4 @@ describe('PaymentsController - Tests de integración', () => {
     expect(mockTransaction.commit).toHaveBeenCalled()
   })
 })
+

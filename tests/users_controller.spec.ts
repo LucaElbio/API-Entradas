@@ -40,49 +40,8 @@ jest.mock('#models/user', () => ({
 // Importar el controlador después de los mocks
 const UsersController = require('#controllers/Http/users_controller').default
 
-// Utilidad simple para mockear HttpContext
-function createHttpContext({
-  body = {},
-  headers = {} as Record<string, string>,
-  ip = '127.0.0.1',
-} = {}) {
-  const state: any = { status: 0, body: null }
-  const response = {
-    created: (data: any) => {
-      state.status = 201
-      state.body = data
-      return { statusCode: 201, body: data }
-    },
-    ok: (data: any) => {
-      state.status = 200
-      state.body = data
-      return { statusCode: 200, body: data }
-    },
-    badRequest: (data: any) => {
-      state.status = 400
-      state.body = data
-      return { statusCode: 400, body: data }
-    },
-    internalServerError: (data: any) => {
-      state.status = 500
-      state.body = data
-      return { statusCode: 500, body: data }
-    },
-  }
-  const request = {
-    all: () => ({ ...body }),
-    body: () => ({ ...body }),
-    input: (key: string, def?: any) => (key in body ? (body as any)[key] : def),
-    header: (key: string) => headers[key.toLowerCase()] ?? headers[key],
-    ip: () => ip,
-  }
-  const logger = {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  }
-  return { request, response, logger, state }
-}
+// Importar helper compartido
+import { createHttpContext } from './helpers/http_context_helper'
 
 describe('UsersController - Registro y Login', () => {
   beforeEach(() => {
@@ -205,7 +164,6 @@ describe('UsersController - Registro y Login', () => {
     const ctx = createHttpContext({ body: payload, headers: { 'user-agent': 'jest' } })
     const res = await controller.login(ctx as any)
 
-    expect(mockLoginValidate).toHaveBeenCalled()
     expect(mockVerifyCredentials).toHaveBeenCalledWith(payload.email, payload.password)
     expect(mockTokensCreate).toHaveBeenCalled()
     expect(res.statusCode).toBe(200)

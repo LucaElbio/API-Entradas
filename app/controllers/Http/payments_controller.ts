@@ -171,8 +171,14 @@ export default class PaymentsController {
 
       // 14. Send email with tickets (async, non-blocking)
       // This is done AFTER commit to ensure data consistency
+      console.log('📧 ========== INICIANDO ENVÍO DE EMAIL ==========')
+      console.log('Usuario:', reservation.user.email)
+      console.log('Tickets generados:', tickets.length)
+      
       try {
         const mailService = new MailService()
+        console.log('📧 MailService instanciado correctamente')
+        
         await mailService.sendPurchaseConfirmation({
           user: {
             firstName: reservation.user.firstName,
@@ -207,7 +213,10 @@ export default class PaymentsController {
       } catch (emailError) {
         // Log email error but don't fail the payment (payment already committed)
         console.error('⚠️  Error sending confirmation email:', emailError)
+        console.error('⚠️  Stack trace:', emailError.stack)
       }
+      console.log('📧 ========== FIN ENVÍO DE EMAIL ==========')
+
 
       // 15. Return success response
       return response.ok({
